@@ -1,0 +1,323 @@
+.limplayer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    font-family: Helvetica Neue, helvetica, arial, Hiragino Kaku Gothic Pro, Meiryo, MS Gothic, sans-serif;
+    margin: 5px;
+    padding: 0 15px;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.07), 0 1px 5px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    user-select: none;
+    line-height: initial;
+    position: relative;
+    min-width: 620px;
+    height: 90px;
+}
+
+.limplayer * {
+    user-select: none;
+}
+
+.limplayer a {
+    outline: none;
+    text-decoration: none;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+    user-select: none;
+    -moz-user-select: none;
+    color: black;
+}
+
+.limplayer button {
+    outline: none;
+    border: none;
+    background-color: #fff;
+    cursor: pointer;
+    padding: 0;
+}
+
+.limplayer svg.checked path,
+.limplayer button.checked svg path {
+    fill: #8680df;
+}
+
+.limplayer .limplayer-info,
+.limplayer-side-controller {
+    width: 30%;
+    min-width: 180px;
+    vertical-align: baseline;
+}
+
+.limplayer .limplayer-info .container {
+    display: flex;
+    justify-items: flex-start;
+    position: relative;
+    align-items: center;
+}
+
+.limplayer .limplayer-info .container .cover img {
+    cursor: pointer;
+}
+
+.limplayer .limplayer-info .container .info {
+    margin: 0 15px 0 10px;
+}
+
+.limplayer .limplayer-info .container .info a {
+    color: #4e4e4e;
+}
+
+.limplayer .limplayer-info .container .info .name {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.limplayer .limplayer-info .container .info .artist {
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+.limplayer .limplayer-info .container .like .liked {
+    display: none;
+}
+
+.limplayer-main-controller {
+    max-width: 722px;
+    width: 40%;
+}
+
+.limplayer .limplayer-main-controller .container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.limplayer .limplayer-main-controller .container .controls,
+.limplayer .limplayer-main-controller .container .controls .controls-left,
+.limplayer .limplayer-main-controller .container .controls .controls-right,
+.limplayer .limplayer-main-controller .container .playback {
+    display: flex;
+    align-items: center;
+}
+
+.limplayer .limplayer-main-controller .container .controls {
+    width: 100%;
+    vertical-align: baseline;
+    gap: 24px;
+}
+
+.limplayer .limplayer-main-controller .container .controls .shuffle,
+.limplayer .limplayer-main-controller .container .controls-right .loop {
+    position: relative;
+}
+
+.limplayer .limplayer-main-controller .container .controls .shuffle .pointer,
+.limplayer .limplayer-main-controller .container .controls-right .loop .pointer {
+    position: absolute;
+    bottom: -1px;
+    left: 10px;
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: #8680df;
+    display: none;
+}
+
+.limplayer .limplayer-main-controller .container .controls-right .loop .pointer {
+    bottom: -2px;
+}
+
+.limplayer .limplayer-info .container .like button path,
+.limplayer .limplayer-main-controller .container .controls button path {
+    transition: fill 300ms;
+}
+
+.limplayer .limplayer-side-controller .container button:hover path,
+.limplayer .limplayer-info .container .like button:hover path,
+.limplayer .limplayer-main-controller .container .controls button:hover path {
+    fill: #8680df;
+}
+
+.limplayer .limplayer-main-controller .container .controls .controls-playpause:hover path {
+    width: 38px;
+    height: 38px;
+    margin: -1px;
+}
+
+.limplayer .limplayer-main-controller .container .controls .controls-left,
+.limplayer .limplayer-main-controller .container .controls .controls-right {
+    flex: 1;
+    gap: 20px;
+}
+
+.limplayer .limplayer-main-controller .container .controls .controls-left {
+    justify-content: flex-end;
+}
+
+.limplayer .limplayer-main-controller .container .playback {
+    margin-top: 5px;
+    justify-content: space-between;
+    font-size: 12px;
+    width: 100%;
+    gap: 8px;
+}
+
+.limplayer .limplayer-main-controller .container .playback .now-position,
+.limplayer .limplayer-main-controller .container .playback .duration {
+    min-width: 40px;
+    color: #5e5e5e;
+}
+
+.limplayer .limplayer-main-controller .container .playback .now-position {
+    text-align: right;
+}
+
+.limplayer .limplayer-side-controller .container .volume .progressbar,
+.limplayer .limplayer-main-controller .container .playback .progressbar {
+    width: 100%;
+    vertical-align: baseline;
+    height: 12px;
+    position: relative;
+    cursor: pointer;
+}
+
+.limplayer .limplayer-side-controller .container .volume .progressbar span,
+.limplayer .limplayer-main-controller .container .playback .progressbar span {
+    position: absolute;
+    display: inline-block;
+    height: 4px;
+    top: 4px;
+    border-radius: 2px;
+}
+
+.limplayer .limplayer-side-controller .container .volume .progressbar .total,
+.limplayer .limplayer-main-controller .container .playback .progressbar .total {
+    background-color: #afafaf;
+    width: 100%;
+}
+
+.limplayer .limplayer-side-controller .container .volume .progressbar .pointer,
+.limplayer .limplayer-main-controller .container .playback .progressbar .pointer {
+    position: absolute;
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-radius: 7px;
+    background-color: #8680df;
+    z-index: 1;
+    top: 2px;
+    right: 0px;
+    box-shadow: -2px 2px 3px #00000019;
+    transition-duration: 300ms;
+    transition-property: width, height, top, right;
+}
+
+.limplayer .limplayer-side-controller .container .volume .progressbar .now,
+.limplayer .limplayer-main-controller .container .playback .progressbar .now {
+    background: #8680df;
+    width: 20%;
+    top: 0;
+    transition: background-color 300ms;
+}
+
+.limplayer .limplayer-side-controller .container .volume .progressbar:hover .now,
+.limplayer .limplayer-main-controller .container .playback .progressbar:hover .now {
+    background-color: #df8080;
+}
+
+.limplayer .limplayer-main-controller .container .playback .progressbar:hover .pointer {
+    display: inline-block;
+    top: -5px;
+    right: -7px;
+    width: 14px;
+    height: 14px;
+}
+
+.limplayer .limplayer-side-controller .container .volume .progressbar:hover .pointer {
+    display: inline-block;
+    top: -3px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+}
+
+.limplayer .limplayer-side-controller {
+    justify-content: flex-end;
+
+}
+
+.limplayer .limplayer-side-controller .container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-grow: 1;
+    gap: 10px;
+}
+
+.limplayer .limplayer-side-controller .container .other,
+.limplayer .limplayer-side-controller .container .volume {
+    display: flex;
+    vertical-align: middle;
+}
+
+.limplayer .limplayer-side-controller .container .other {
+    gap: 15px;
+}
+
+.limplayer .limplayer-side-controller .container .volume {
+    flex: 0 1 125px;
+    align-items: center;
+    gap: 5px;
+}
+
+.animate_beat {
+    animation: beat 0.3s linear forwards;
+}
+
+.animate_shake {
+    animation: shake 0.3s linear forwards;
+}
+
+@keyframes beat {
+    0% {
+        transform: scale(1);
+    }
+
+    25% {
+        transform: scale(1.1);
+    }
+
+    50% {
+        transform: scale(1.3);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes shake {
+
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    25% {
+        transform: translate(-40%, 0) rotate(-10deg);
+    }
+
+    50% {
+        transform: translate(20%, 0) rotate(5deg);
+    }
+
+    75% {
+        transform: translate(40%, 0) rotate(10deg);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
