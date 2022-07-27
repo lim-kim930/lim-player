@@ -1,54 +1,19 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import "./index.css";
-import PlayerTemplete from "./html_template";
-
-interface AudioConfig {
-    name: string;
-    artist: string;
-    src: string;
-    lrc?: string;
-    lrcType?: "lrc" | "srt" | "string";
-    cover?: string;
-    theme?: "auto" | string;
-    id?: string;
-}
-
-interface PlayerOptions {
-    /**
-    * @param {boolean} autoplay 是否自动播放
-    * 
-    * 
-    * 
-    * 
-    */
-    // 自动播放
-    autoplay?: boolean;
-    // 同一时间只允许一个播放器在播放
-    mutex?: boolean;
-    // 歌词格式
-    lrcType?: "lrc" | "srt" | "string";
-    // 循环模式
-    loopType?: "list" | "single" | "none";
-    // 是否启用随机播放
-    shuffle?: boolean;
-    // 播放器主题
-    theme?: string;
-    // 音量, 1-100的整数
-    volume?: number;
-    // 音频信息
-    audio?: AudioConfig[];
-    // 存储信息localstorage的字段名
-
-}
+import PlayerTemplete from "./playerTemplate";
+import { hide, show, addClass, removeClass } from "./utils";
+import { PlayerOptions, AudioConfig } from "./types";
 
 class LimPlayer {
     private static playerCount = 0;
     container: HTMLElement;
-    options: PlayerOptions;
-    playing: AudioConfig | null;
     playerID: string;
+    options: PlayerOptions;
+    playLists: AudioConfig[];
+    playing: AudioConfig | null;
     elements: { [key: string]: HTMLElement } | undefined;
-    constructor(el: string, options?: PlayerOptions) {
+    private audio: HTMLAudioElement | undefined;
+    constructor(el: string, options?: PlayerOptions, lists?: AudioConfig[]) {
         // 播放器数量
         LimPlayer.playerCount++;
         // if(options?.mutex && LimPlayer.playerCount > 1) {
@@ -59,26 +24,42 @@ class LimPlayer {
         if (!element) throw new Error("No element found with id: " + el);
         this.container = element;
         this.options = this.initOptions(options);
-        const templete = new PlayerTemplete();
-        this.playerID = templete.id;
-        element.classList.add("limplayer");
+        this.saveOptionsStorage(true);
+        localStorage.setItem("lim_player_volume", String(this.options.volume!));
+        this.playLists = lists || [];
+        this.playing = this.playLists[0] || null;
+        this.initAudio(this.playing);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const templete = new PlayerTemplete(this.options, this.playing);
+        this.playerID = templete.id as string;
+        addClass(element, "limplayer");
         element.setAttribute("id", this.playerID);
-        element.innerHTML = templete.content;
-        this.playing = null;
+        element.innerHTML = templete.content as string;
         this.initElements();
         this.initEvents();
+    }
+
+    private initAudio(audio: AudioConfig) {
+        this.audio = document.createElement("audio");
+        this.audio.volume = this.options.volume!;
+        if(audio) {
+            this.audio.src = audio.src;
+        }
+        this.audio.addEventListener("canplay", ()=>{
+            console.log(6666);
+        });
     }
 
     private initOptions(options?: PlayerOptions) {
         const defaultOptions: PlayerOptions = {
             autoplay: true,
+            preload: "metadata",
             mutex: false,
             lrcType: "lrc",
             loopType: "none",
             shuffle: false,
             theme: "default",
-            volume: 50,
-            audio: []
+            volume: 50
         };
         return options ? { ...defaultOptions, ...options } : defaultOptions;
     }
@@ -102,13 +83,33 @@ class LimPlayer {
         const mediumVolumeSvg = document.querySelector("#" + this.playerID + " .volume .medium") as HTMLElement;
         const highVolumeSvg = document.querySelector("#" + this.playerID + " .volume .high") as HTMLElement;
         const volumeButton = document.querySelector("#" + this.playerID + " .volume button") as HTMLElement;
+        const volumeProgressNow = document.querySelector("#" + this.playerID + " .volume .now") as HTMLElement;
+        const volumeProgressBar = document.querySelector("#" + this.playerID + " .volume .progressbar") as HTMLElement;
+        const volumePointer = document.querySelector("#" + this.playerID + " .volume .pointer") as HTMLElement;
         this.elements = {
             likedSvg, unlikeSvg, likeButton,
             shuffleSvg, shuffleButton, shufflePointer,
             listLoopSvg, singleLoopSvg, loopButtton, loopPointer,
-            muteSvg, mediumVolumeSvg, highVolumeSvg, volumeButton
+            muteSvg, mediumVolumeSvg, highVolumeSvg, volumeButton, volumeProgressNow, volumeProgressBar, volumePointer
         };
         console.log(this.elements);
+    }
+
+    private saveOptionsStorage(firstFlag = false) {
+        if (!firstFlag) return localStorage.setItem("lim_player_options", JSON.stringify(this.options));
+        const options = localStorage.getItem("lim_player_options");
+        let _options: PlayerOptions;
+        if (options) {
+            _options = { ...JSON.parse(options), ...this.options } as PlayerOptions;
+        } else {
+            _options = this.initOptions(this.options);
+        }
+        localStorage.setItem("lim_player_options", JSON.stringify(_options));
+    }
+
+    private getOptionsStorage() {
+        const options = localStorage.getItem("lim_player_options");
+        return options ? JSON.parse(options) as PlayerOptions : this.options;
     }
 
     private initEvents() {
@@ -116,75 +117,165 @@ class LimPlayer {
         let newSvg: HTMLElement;
         let className: string[];
         if (!this.elements) throw new Error("Elements need to be initialized before initializing events");
+        const likedSvg = this.elements.likedSvg;
+        const unlikeSvg = this.elements.unlikeSvg;
+
         const shuffle = this.elements.shuffleSvg;
         const shufflePointer = this.elements.shufflePointer;
+
         const singleLoopSvg = this.elements.singleLoopSvg;
         const listLoopSvg = this.elements.listLoopSvg;
         const loopPointer = this.elements.loopPointer;
+
+        const highVolumeSvg = this.elements.highVolumeSvg;
+        const muteSvg = this.elements.muteSvg;
+        const mediumVolumeSvg = this.elements.mediumVolumeSvg;
+        const volumeProgressBar = this.elements.volumeProgressBar;
+        const volumePointer = this.elements.volumePointer;
+        const volumeProgressNow = this.elements.volumeProgressNow;
         // 喜欢按钮点击事件
         this.elements.likeButton.addEventListener("click", () => {
-            if (this.elements!.likedSvg.classList.contains("animate_beat")) {
-                oldSvg = this.elements!.likedSvg;
-                newSvg = this.elements!.unlikeSvg;
+            if (!this.playing) return;
+            if (this.playing.liked) {
+                oldSvg = likedSvg;
+                newSvg = unlikeSvg;
                 className = ["animate_beat", "animate_shake"];
-                this.likeChanged("unlike", this.playing!);
+                this.likeChanged("unlike", this.playing);
             } else {
-                oldSvg = this.elements!.unlikeSvg;
-                newSvg = this.elements!.likedSvg;
+                oldSvg = unlikeSvg;
+                newSvg = likedSvg;
                 className = ["animate_shake", "animate_beat"];
-                this.likeChanged("liked", this.playing!);
+                this.likeChanged("liked", this.playing);
             }
-            oldSvg.style.display = "none";
-            oldSvg.classList.remove(className[0]);
-            newSvg.style.display = "block";
-            newSvg.classList.add(className[1]);
+            this.playing.liked = !this.playing.liked;
+            // TODO: 需要在回调里更改总数据的like
+            hide(oldSvg);
+            removeClass(oldSvg, className[0]);
+            show(newSvg);
+            addClass(newSvg, className[1]);
         });
         // 随机播放按钮点击事件
         this.elements.shuffleButton.addEventListener("click", () => {
-            shuffle.classList.add("animate_beat");
+            addClass(shuffle, "animate_beat");
             setTimeout(() => {
-                shuffle.classList.remove("animate_beat");
+                removeClass(shuffle, "animate_beat");
             }, 300);
-            if (shuffle.classList.contains("checked")) {
-                shuffle.classList.remove("checked");
-                shufflePointer.style.display = "none";
+            if (this.options.shuffle) {
+                removeClass(shuffle, "checked");
+                hide(shufflePointer);
             } else {
-                shuffle.classList.add("checked");
-                shufflePointer.style.display = "block";
+                addClass(shuffle, "checked");
+                show(shufflePointer);
             }
+            this.options.shuffle = !this.options.shuffle;
         });
         // 循环按钮点击事件
         this.elements.loopButtton.addEventListener("click", () => {
             let noneFlag = false;
-            if (singleLoopSvg.classList.contains("checked")) {
-                noneFlag = true;
-                oldSvg = singleLoopSvg;
-                newSvg = listLoopSvg;
-            } else if (listLoopSvg.classList.contains("checked")) {
-                oldSvg = listLoopSvg;
-                newSvg = singleLoopSvg;
-            } else {
-                listLoopSvg.classList.add("animate_beat", "checked");
-                loopPointer.style.display = "block";
-                return;
+            switch (this.options.loopType) {
+                case "single":
+                    noneFlag = true;
+                    oldSvg = singleLoopSvg;
+                    newSvg = listLoopSvg;
+                    this.options.loopType = "none";
+                    break;
+                case "list":
+                    oldSvg = listLoopSvg;
+                    newSvg = singleLoopSvg;
+                    this.options.loopType = "single";
+                    break;
+                default:
+                    addClass(listLoopSvg, "animate_beat", "checked");
+                    show(loopPointer);
+                    this.options.loopType = "list";
+                    return;
             }
-            oldSvg.style.display = "none";
-            oldSvg.classList.remove("animate_beat", "checked");
-            newSvg.style.display = "block";
+            hide(oldSvg);
+            removeClass(oldSvg, "animate_beat", "checked");
+            show(newSvg);
             if (noneFlag) {
-                listLoopSvg.classList.add("animate_beat");
+                addClass(listLoopSvg, "animate_beat");
                 setTimeout(() => {
-                    listLoopSvg.classList.remove("animate_beat");
+                    removeClass(listLoopSvg, "animate_beat");
                 }, 300);
-                loopPointer.style.display = "none";
+                hide(loopPointer);
                 return;
             }
-            singleLoopSvg.classList.add("animate_beat", "checked");
+            addClass(singleLoopSvg, "animate_beat", "checked");
         });
+
+
         // 音量按钮点击事件
         this.elements.volumeButton.addEventListener("click", () => {
-           console.log(6);
-           
+            const volume = localStorage.getItem("lim_player_volume");
+            console.log(volume);
+            
+            const _volume = (volume && volume !== "0") ? Number(volume) : 50;
+            console.log(_volume);
+            
+            if (this.options.volume === 0) {
+                hide(muteSvg);
+                if (_volume > 50) {
+                    show(highVolumeSvg);
+                } else {
+                    show(mediumVolumeSvg);
+                }
+                this.options.volume = _volume;
+            } else {
+                hide(mediumVolumeSvg);
+                hide(highVolumeSvg);
+                show(muteSvg);
+                this.options.volume = 0;
+            }
+            this.saveOptionsStorage();
+            volumeProgressNow.style.width = String(this.options.volume) + "%";
+        });
+        // 音量条点击事件
+        const moveHandler = (e: MouseEvent) => {
+            const width = e.clientX - volumeProgressBar.offsetLeft - 15;
+            if (width < 0 || width > 100) return;
+            this.options.volume = width;
+            if(width > 50) {
+                hide(mediumVolumeSvg);
+                hide(muteSvg);
+                show(highVolumeSvg);
+            } else if (width === 0) {
+                hide(highVolumeSvg);
+                hide(mediumVolumeSvg);
+                show(muteSvg);
+            } else {
+                hide(muteSvg);
+                hide(highVolumeSvg);
+                show(mediumVolumeSvg);
+            }
+            volumeProgressNow.style.width = String(width) + "px";
+        };
+        const upHandler = () => {
+            localStorage.setItem("lim_player_volume", String(this.options.volume!));
+            document.removeEventListener("mousemove", moveHandler);
+            document.removeEventListener("mouseup", upHandler);
+            removeClass(volumePointer, "pointer-active");
+            removeClass(volumeProgressNow, "now-active");
+        };
+        volumeProgressBar.addEventListener("mousedown", (e) => {
+            // console.log(e);
+            // console.log(volumeProgressBar.offsetLeft);
+            moveHandler(e);
+            addClass(volumePointer, "pointer-active");
+            addClass(volumeProgressNow, "now-active");
+            document.addEventListener("mousemove", moveHandler);
+            document.addEventListener("mouseup", upHandler);
+        });
+        // 空格播放和暂停
+        document.addEventListener("keypress", (e)=>{
+            const element = e.target! as HTMLElement;
+            if (element.nodeName == 'TEXTAREA' || element.nodeName == 'INPUT') {
+                return;
+            } else {
+                e.preventDefault();
+                // TODO
+            }
+            
         });
     }
 
