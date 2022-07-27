@@ -29,19 +29,18 @@ class LimPlayer {
         this.playLists = lists || [];
         this.playing = this.playLists[0] || null;
         this.initAudio(this.playing);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const templete = new PlayerTemplete(this.options, this.playing);
-        this.playerID = templete.id as string;
+        this.playerID = templete.id;
         addClass(element, "limplayer");
         element.setAttribute("id", this.playerID);
-        element.innerHTML = templete.content as string;
+        element.innerHTML = templete.content;
         this.initElements();
         this.initEvents();
     }
 
     private initAudio(audio: AudioConfig) {
         this.audio = document.createElement("audio");
-        this.audio.volume = this.options.volume!;
+        this.audio.volume = this.options.volume! / 100;
         if(audio) {
             this.audio.src = audio.src;
         }
