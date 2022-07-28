@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import "./index.css";
 import PlayerTemplete from "./playerTemplate";
-import { hide, show, addClass, removeClass } from "./utils";
+import { hide, show, addClass, removeClass, secondToTime, percentToSecond } from "./utils";
 import { PlayerOptions, AudioConfig } from "./types";
 
 class LimPlayer {
@@ -28,24 +28,31 @@ class LimPlayer {
         localStorage.setItem("lim_player_volume", String(this.options.volume!));
         this.playLists = lists || [];
         this.playing = this.playLists[0] || null;
-        this.initAudio(this.playing);
         const templete = new PlayerTemplete(this.options, this.playing);
         this.playerID = templete.id;
         addClass(element, "limplayer");
         element.setAttribute("id", this.playerID);
         element.innerHTML = templete.content;
         this.initElements();
+        this.initAudio(this.playing);
         this.initEvents();
     }
 
     private initAudio(audio: AudioConfig) {
         this.audio = document.createElement("audio");
         this.audio.volume = this.options.volume! / 100;
-        if(audio) {
+        if (audio) {
             this.audio.src = audio.src;
         }
-        this.audio.addEventListener("canplay", ()=>{
-            console.log(6666);
+        this.audio.addEventListener("canplay", () => {
+            // this.audio!.play().catch((err)=>{
+            //     throw err;
+            // });
+            // console.log(this.audio!.currentTime);
+            // console.log(this.audio!.duration);
+            if (this.audio!.duration) {
+                this.elements!.durationText.innerText = secondToTime(this.audio!.duration);
+            }
         });
     }
 
@@ -85,11 +92,19 @@ class LimPlayer {
         const volumeProgressNow = document.querySelector("#" + this.playerID + " .volume .now") as HTMLElement;
         const volumeProgressBar = document.querySelector("#" + this.playerID + " .volume .progressbar") as HTMLElement;
         const volumePointer = document.querySelector("#" + this.playerID + " .volume .pointer") as HTMLElement;
+        // progressbar
+        const durationText = document.querySelector("#" + this.playerID + " .playback .duration span") as HTMLElement;
+        const nowText = document.querySelector("#" + this.playerID + " .playback .now-position span") as HTMLElement;
+        const playbackProgressBar = document.querySelector("#" + this.playerID + " .playback .progressbar") as HTMLElement;
+        const playbackPointer = document.querySelector("#" + this.playerID + " .playback .pointer") as HTMLElement;
+        const playbackProgressNow = document.querySelector("#" + this.playerID + " .playback .now") as HTMLElement;
+
         this.elements = {
             likedSvg, unlikeSvg, likeButton,
             shuffleSvg, shuffleButton, shufflePointer,
             listLoopSvg, singleLoopSvg, loopButtton, loopPointer,
-            muteSvg, mediumVolumeSvg, highVolumeSvg, volumeButton, volumeProgressNow, volumeProgressBar, volumePointer
+            muteSvg, mediumVolumeSvg, highVolumeSvg, volumeButton, volumeProgressNow, volumeProgressBar, volumePointer,
+            durationText, nowText, playbackProgressBar, playbackPointer, playbackProgressNow
         };
         console.log(this.elements);
     }
@@ -132,6 +147,10 @@ class LimPlayer {
         const volumeProgressBar = this.elements.volumeProgressBar;
         const volumePointer = this.elements.volumePointer;
         const volumeProgressNow = this.elements.volumeProgressNow;
+
+        const playbackProgressBar = this.elements.playbackProgressBar;
+        const playbackPointer = this.elements.playbackPointer;
+        const playbackProgressNow = this.elements.playbackProgressNow;
         // 喜欢按钮点击事件
         this.elements.likeButton.addEventListener("click", () => {
             if (!this.playing) return;
@@ -202,16 +221,11 @@ class LimPlayer {
             }
             addClass(singleLoopSvg, "animate_beat", "checked");
         });
-
-
         // 音量按钮点击事件
         this.elements.volumeButton.addEventListener("click", () => {
             const volume = localStorage.getItem("lim_player_volume");
-            console.log(volume);
-            
             const _volume = (volume && volume !== "0") ? Number(volume) : 50;
-            console.log(_volume);
-            
+
             if (this.options.volume === 0) {
                 hide(muteSvg);
                 if (_volume > 50) {
@@ -228,35 +242,41 @@ class LimPlayer {
             }
             this.saveOptionsStorage();
             volumeProgressNow.style.width = String(this.options.volume) + "%";
-        });
-        // 音量条点击事件
-        const moveHandler = (e: MouseEvent) => {
-            const width = e.clientX - volumeProgressBar.offsetLeft - 15;
-            if (width < 0 || width > 100) return;
-            this.options.volume = width;
-            if(width > 50) {
-                hide(mediumVolumeSvg);
-                hide(muteSvg);
-                show(highVolumeSvg);
-            } else if (width === 0) {
-                hide(highVolumeSvg);
-                hide(mediumVolumeSvg);
-                show(muteSvg);
-            } else {
-                hide(muteSvg);
-                hide(highVolumeSvg);
-                show(mediumVolumeSvg);
+            if (this.audio) {
+                this.audio.volume = this.options.volume / 100;
             }
-            volumeProgressNow.style.width = String(width) + "px";
-        };
-        const upHandler = () => {
-            localStorage.setItem("lim_player_volume", String(this.options.volume!));
-            document.removeEventListener("mousemove", moveHandler);
-            document.removeEventListener("mouseup", upHandler);
-            removeClass(volumePointer, "pointer-active");
-            removeClass(volumeProgressNow, "now-active");
-        };
+        });
+        // 音量条事件
         volumeProgressBar.addEventListener("mousedown", (e) => {
+            const moveHandler = (e: MouseEvent) => {
+                const width = e.clientX - volumeProgressBar.offsetLeft - 15;
+                if (width < 0 || width > 100) return;
+                this.options.volume = width;
+                if (width > 50) {
+                    hide(mediumVolumeSvg);
+                    hide(muteSvg);
+                    show(highVolumeSvg);
+                } else if (width === 0) {
+                    hide(highVolumeSvg);
+                    hide(mediumVolumeSvg);
+                    show(muteSvg);
+                } else {
+                    hide(muteSvg);
+                    hide(highVolumeSvg);
+                    show(mediumVolumeSvg);
+                }
+                volumeProgressNow.style.width = String(width) + "px";
+                if (this.audio) {
+                    this.audio.volume = width / 100;
+                }
+            };
+            const upHandler = () => {
+                localStorage.setItem("lim_player_volume", String(this.options.volume!));
+                document.removeEventListener("mousemove", moveHandler);
+                document.removeEventListener("mouseup", upHandler);
+                removeClass(volumePointer, "pointer-active");
+                removeClass(volumeProgressNow, "now-active");
+            };
             // console.log(e);
             // console.log(volumeProgressBar.offsetLeft);
             moveHandler(e);
@@ -266,15 +286,58 @@ class LimPlayer {
             document.addEventListener("mouseup", upHandler);
         });
         // 空格播放和暂停
-        document.addEventListener("keypress", (e)=>{
+        document.addEventListener("keypress", (e) => {
             const element = e.target! as HTMLElement;
             if (element.nodeName == 'TEXTAREA' || element.nodeName == 'INPUT') {
                 return;
             } else {
                 e.preventDefault();
-                // TODO
+                // TODO:
+                if (this.audio) {
+                    // TODO: 使用worker
+                    this.audio.play().then(() => {
+                        setInterval(() => {
+                            const currentTime = this.audio!.currentTime;
+                            this.elements!.nowText.innerText = secondToTime(currentTime);
+                        }, 1000);
+                    }).catch((err) => {
+                        throw err;
+                    });
+                }
             }
-            
+
+        });
+        // 播放进度条事件
+        playbackProgressBar.addEventListener("mousedown", (e) => {
+            if (!this.audio) return;
+            let second: number;
+            const moveHandler = (e: MouseEvent) => {
+                const widthDifference = e.clientX - playbackProgressBar.offsetLeft - 15;
+                // console.log(playbackProgressBar.offsetWidth);
+
+                // console.log(widthDifference);
+                // console.log(widthDifference / playbackProgressBar.offsetWidth);
+                const precent = widthDifference / playbackProgressBar.offsetWidth;
+                const current = percentToSecond(precent, this.audio!.duration);
+                second = current.second;
+                this.elements!.nowText.innerText = current.time;
+                playbackProgressNow.style.width = (precent * 100).toString() + "%";
+            };
+            const upHandler = () => {
+                // localStorage.setItem("lim_player_volume", String(this.options.volume!));
+                document.removeEventListener("mousemove", moveHandler);
+                document.removeEventListener("mouseup", upHandler);
+                removeClass(playbackPointer, "pointer-active");
+                removeClass(playbackProgressNow, "now-active");
+                if(this.audio) {
+                    this.audio.currentTime = second;
+                }
+            };
+            moveHandler(e);
+            addClass(playbackPointer, "pointer-active");
+            addClass(playbackProgressNow, "now-active");
+            document.addEventListener("mousemove", moveHandler);
+            document.addEventListener("mouseup", upHandler);
         });
     }
 

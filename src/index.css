@@ -222,11 +222,13 @@
 
 .limplayer .limplayer-side-controller .container .volume .progressbar:hover .now,
 .limplayer .limplayer-main-controller .container .playback .progressbar:hover .now,
-.limplayer .limplayer-side-controller .container .volume .progressbar .now-active {
+.limplayer .limplayer-side-controller .container .volume .progressbar .now-active,
+.limplayer .limplayer-side-controller .container .playback .progressbar .now-active {
     background-color: #df8080;
 }
 
-.limplayer .limplayer-main-controller .container .playback .progressbar:hover .pointer {
+.limplayer .limplayer-main-controller .container .playback .progressbar:hover .pointer,
+.limplayer .limplayer-main-controller .container .playback .progressbar .pointer-active {
     display: inline-block;
     top: -5px;
     right: -7px;
