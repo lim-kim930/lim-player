@@ -8,6 +8,7 @@ export interface AudioConfig {
     cover?: string;
     theme?: "auto" | string;
     id?: string;
+    index?: number;
     liked?: boolean
 }
 

@@ -102,7 +102,7 @@
 .limplayer .limplayer-main-controller .container .controls {
     width: 100%;
     vertical-align: baseline;
-    gap: 24px;
+    gap: 18px;
 }
 
 .limplayer .limplayer-main-controller .container .controls .shuffle,
