@@ -58,6 +58,7 @@
 
 .limplayer .limplayer-info .container .cover img {
     cursor: pointer;
+    width: 70px;
 }
 
 .limplayer .limplayer-info .container .info {
@@ -76,10 +77,6 @@
 .limplayer .limplayer-info .container .info .artist {
     margin-top: 5px;
     font-size: 12px;
-}
-
-.limplayer .limplayer-info .container .like .liked {
-    display: none;
 }
 
 .limplayer-main-controller {
@@ -105,7 +102,7 @@
 .limplayer .limplayer-main-controller .container .controls {
     width: 100%;
     vertical-align: baseline;
-    gap: 24px;
+    gap: 18px;
 }
 
 .limplayer .limplayer-main-controller .container .controls .shuffle,
@@ -218,17 +215,20 @@
 .limplayer .limplayer-side-controller .container .volume .progressbar .now,
 .limplayer .limplayer-main-controller .container .playback .progressbar .now {
     background: #8680df;
-    width: 20%;
     top: 0;
-    transition: background-color 300ms;
+    transition: background-color 300ms, width 50ms;
+    max-width: 100%;
 }
 
 .limplayer .limplayer-side-controller .container .volume .progressbar:hover .now,
-.limplayer .limplayer-main-controller .container .playback .progressbar:hover .now {
+.limplayer .limplayer-main-controller .container .playback .progressbar:hover .now,
+.limplayer .limplayer-side-controller .container .volume .progressbar .now-active,
+.limplayer .limplayer-side-controller .container .playback .progressbar .now-active {
     background-color: #df8080;
 }
 
-.limplayer .limplayer-main-controller .container .playback .progressbar:hover .pointer {
+.limplayer .limplayer-main-controller .container .playback .progressbar:hover .pointer,
+.limplayer .limplayer-main-controller .container .playback .progressbar .pointer-active {
     display: inline-block;
     top: -5px;
     right: -7px;
@@ -236,7 +236,8 @@
     height: 14px;
 }
 
-.limplayer .limplayer-side-controller .container .volume .progressbar:hover .pointer {
+.limplayer .limplayer-side-controller .container .volume .progressbar:hover .pointer,
+.limplayer .limplayer-side-controller .container .volume .progressbar .pointer-active {
     display: inline-block;
     top: -3px;
     right: -5px;
