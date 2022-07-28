@@ -7,7 +7,6 @@ export default class PlayerTemplete {
         // 每个player有一个以时间戳为区分的id
         const date = new Date().getTime();
         this.id = "player-" + date.toString();
-        console.log(audio);
         
         // 通过options初始渲染的按钮
         if (audio === null) {

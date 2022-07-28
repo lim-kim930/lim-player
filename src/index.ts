@@ -157,7 +157,7 @@ class LimPlayer {
             playSvg, pauseSvg, playButton,
             preButton, nextButton
         };
-        console.log(this.elements);
+        // console.log(this.elements);
     }
 
     private saveOptionsStorage(firstFlag = false) {
@@ -382,6 +382,7 @@ class LimPlayer {
                 // console.log(widthDifference);
                 // console.log(widthDifference / playbackProgressBar.offsetWidth);
                 const precent = widthDifference / playbackProgressBar.offsetWidth;
+                if(precent > 1 || precent < 0) return;
                 const current = percentToSecond(precent, this.audio!.duration);
                 second = current.second;
                 this.elements!.nowText.innerText = current.time;
@@ -543,7 +544,7 @@ class LimPlayer {
         this.playbackTimer = window.setInterval(() => {
             if (this.audio!.paused) return;
             const currentTime = this.audio!.currentTime;
-            console.log(currentTime);
+            // console.log(currentTime);
 
             this.elements!.nowText.innerText = secondToTime(currentTime);
             this.elements!.playbackProgressNow.style.width = (currentTime / this.audio!.duration * 100).toString() + "%";
