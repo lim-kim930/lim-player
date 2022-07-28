@@ -414,6 +414,17 @@ class LimPlayer {
         });
     }
 
+    private autoplayHelper() {
+        if (!this.audio!.autoplay) {
+            if (this.controlTimer) {
+                clearTimeout(this.controlTimer);
+            }
+            this.controlTimer = window.setTimeout(() => {
+                this.play();
+            }, 500);
+        }
+    }
+
     private preAndNextHandler(nextFlag = false) {
         if (!this.playing) return;
         this.pause();
@@ -446,14 +457,7 @@ class LimPlayer {
         this.initAudio();
         this.elements!.nowText.innerText = "0:00";
         this.elements!.playbackProgressNow.style.width = "0";
-        if (!this.audio!.autoplay) {
-            if (this.controlTimer) {
-                clearTimeout(this.controlTimer);
-            }
-            this.controlTimer = window.setTimeout(() => {
-                this.play();
-            }, 500);
-        }
+        this.autoplayHelper();
     }
 
     private nextHandlerWithoutLoop() {
@@ -477,6 +481,7 @@ class LimPlayer {
             }
         }
         this.initAudio();
+        this.autoplayHelper();
     }
 
     private playOrPause() {
