@@ -12,6 +12,7 @@ class LimPlayer {
     playList: AudioConfig[];
     playing: AudioConfig | null;
     private playbackTimer: number | undefined;
+    private controlTimer: number | undefined;
     elements: { [key: string]: HTMLElement } | undefined;
     private audio: HTMLAudioElement | undefined;
     constructor(el: string, options?: PlayerOptions, lists?: AudioConfig[]) {
@@ -86,7 +87,7 @@ class LimPlayer {
 
     private initOptions(options?: PlayerOptions) {
         const defaultOptions: PlayerOptions = {
-            autoplay: false,
+            autoplay: true,
             preload: "metadata",
             mutex: false,
             lrcType: "lrc",
@@ -99,8 +100,8 @@ class LimPlayer {
     }
 
     private initPlayList(list: AudioConfig[] | undefined) {
-        if(list) {
-            list.forEach((audio, index)=>{
+        if (list) {
+            list.forEach((audio, index) => {
                 audio.index = index;
             });
         }
@@ -414,20 +415,29 @@ class LimPlayer {
 
     private preAndNextHandler(nextFlag = false) {
         if (!this.playing) return;
+        this.pause();
         if (this.playList.length > 1) {
             const index = this.playing.index as number;
             const length = this.playList.length;
-            if (nextFlag) {
-                if (index === length - 1) {
-                    this.playing = this.playList[0];
-                } else {
-                    this.playing = this.playList[index + 1];
+            if (this.options.shuffle) {
+                let random = index;
+                while (random === index) {
+                    random = Math.floor(Math.random() * length);
                 }
+                this.playing = this.playList[random];
             } else {
-                if (index === 0) {
-                    this.playing = this.playList[length - 1];
+                if (nextFlag) {
+                    if (index === length - 1) {
+                        this.playing = this.playList[0];
+                    } else {
+                        this.playing = this.playList[index + 1];
+                    }
                 } else {
-                    this.playing = this.playList[index - 1];
+                    if (index === 0) {
+                        this.playing = this.playList[length - 1];
+                    } else {
+                        this.playing = this.playList[index - 1];
+                    }
                 }
             }
         }
@@ -435,6 +445,37 @@ class LimPlayer {
         this.initAudio();
         this.elements!.nowText.innerText = "0:00";
         this.elements!.playbackProgressNow.style.width = "0";
+        if (!this.audio!.autoplay) {
+            if (this.controlTimer) {
+                clearTimeout(this.controlTimer);
+            }
+            this.controlTimer = window.setTimeout(() => {
+                this.play();
+            }, 500);
+        }
+    }
+
+    private nextHandlerWithoutLoop() {
+        if (!this.playing) return;
+        const index = this.playing.index as number;
+        const length = this.playList.length;
+
+        this.elements!.nowText.innerText = "0:00";
+        this.elements!.playbackProgressNow.style.width = "0";
+        if (index === length - 1 || length === 1) {
+            return;
+        } else {
+            if (this.options.shuffle) {
+                let random = index;
+                while (random === index) {
+                    random = Math.floor(Math.random() * length);
+                }
+                this.playing = this.playList[random];
+            } else {
+                this.playing = this.playList[index + 1];
+            }
+        }
+        this.initAudio();
     }
 
     private playOrPause() {
@@ -470,6 +511,8 @@ class LimPlayer {
         if (this.playbackTimer) return;
 
         const endHnadler = () => {
+            hide(this.elements!.pauseSvg);
+            show(this.elements!.playSvg);
             if (this.playbackTimer) {
 
                 clearInterval(this.playbackTimer);
@@ -479,21 +522,19 @@ class LimPlayer {
                 this.elements!.playbackProgressNow.style.width = "100%";
             }
 
-            const index = this.playing!.index! + 1;
             // 有下一曲? TODO: 按照循环类型做判断
-            if (this.playList[index]) {
-                this.playing = this.playList[index];
-                this.initAudio();
-            } else {
-                if (this.options.loopType === "list") {
-                    this.playing = this.playList[0];
-                    this.initAudio();
-                } else {
-                    this.audio!.currentTime = 0;
-                }
+            switch (this.options.loopType) {
+                case "list":
+                    this.preAndNextHandler(true);
+                    break;
+                case "none":
+                    this.nextHandlerWithoutLoop();
+                    break;
+                case "single":
+                default:
+                    break;
+
             }
-            this.elements!.nowText.innerText = "0:00";
-            this.elements!.playbackProgressNow.style.width = "0";
             this.audio!.removeEventListener("ended", endHnadler);
         };
 
@@ -515,7 +556,6 @@ class LimPlayer {
         this.audio!.addEventListener("ended", endHnadler);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     private likeChanged(value: "liked" | "unlike", audio: AudioConfig) { }
 
     onLikeChanged(callback: (value: "liked" | "unlike", audio: AudioConfig) => void) {
