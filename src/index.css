@@ -223,7 +223,7 @@
 .limplayer .limplayer-side-controller .container .volume .progressbar:hover .now,
 .limplayer .limplayer-main-controller .container .playback .progressbar:hover .now,
 .limplayer .limplayer-side-controller .container .volume .progressbar .now-active,
-.limplayer .limplayer-side-controller .container .playback .progressbar .now-active {
+.limplayer .limplayer-main-controller .container .playback .progressbar .now-active {
     background-color: #df8080;
 }
 
