@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import "./index.css";
+import "./assets/index.css";
 import PlayerTemplete from "./playerTemplate";
 import { hide, show, addClass, removeClass, secondToTime, percentToSecond } from "./utils";
 import { PlayerOptions, AudioConfig } from "./types";
+import PlayerStorage from "./storage";
+import { defaultOptions, defaultSongConfig } from "./config";
 
 class LimPlayer {
     private static playerCount = 0;
@@ -27,7 +29,7 @@ class LimPlayer {
         this.container = element;
         this.options = this.initOptions(options);
         this.saveOptionsStorage(true);
-        localStorage.setItem("lim_player_volume", String(this.options.volume!));
+        localStorage.setItem("lim_player_volume", this.options.volume!.toString());
         // TODO: 检查用户输入的播放列表
         this.playList = this.initPlayList(lists);
         this.playing = this.playList[0] || null;
@@ -46,7 +48,7 @@ class LimPlayer {
         this.audio.preload = this.options.preload!;
         this.audio.autoplay = this.options.autoplay!;
         this.audio.loop = this.options.loopType === "single";
-        this.audio.volume = this.options.volume! / 100;
+        this.audio.volume = this.options.volume!;
         this.audio.src = this.playing!.src;
         this.audio.addEventListener("canplay", () => {
             // this.audio!.play().catch((err)=>{
@@ -86,26 +88,28 @@ class LimPlayer {
     }
 
     private initOptions(options?: PlayerOptions) {
-        const defaultOptions: PlayerOptions = {
-            autoplay: true,
-            preload: "metadata",
-            mutex: false,
-            lrcType: "lrc",
-            loopType: "none",
-            shuffle: false,
-            theme: "default",
-            volume: 50
-        };
+        if (options) {
+            Object.keys(options).forEach((key) => {
+                if (!Object.prototype.hasOwnProperty.call(defaultOptions, key)) {
+                    throw new ReferenceError("An unknown field was passed in: " + key);
+                }
+            });
+        }
         return options ? { ...defaultOptions, ...options } : defaultOptions;
     }
 
     private initPlayList(list: AudioConfig[] | undefined) {
-        if (list) {
+        if (list && list.length !== 0) {
             list.forEach((audio, index) => {
+                if (!audio.name || !audio.src || !audio.artist) {
+                    throw new ReferenceError("Missing required fields in an audio config");
+                }
                 audio.index = index;
             });
+        } else {
+            list = [defaultSongConfig];
         }
-        return list as AudioConfig[];
+        return list;
     }
 
     private initElements() {
@@ -295,8 +299,8 @@ class LimPlayer {
         });
         // 音量按钮点击事件
         this.elements.volumeButton.addEventListener("click", () => {
-            const volume = localStorage.getItem("lim_player_volume");
-            const _volume = (volume && volume !== "0") ? Number(volume) : 50;
+            const volume = PlayerStorage.getVolume() || (defaultOptions.volume as number);
+            const _volume = volume !== 0 ? volume : 50;
 
             if (this.options.volume === 0) {
                 hide(muteSvg);
@@ -315,7 +319,7 @@ class LimPlayer {
             this.saveOptionsStorage();
             volumeProgressNow.style.width = String(this.options.volume) + "%";
             if (this.audio) {
-                this.audio.volume = this.options.volume / 100;
+                this.audio.volume = this.options.volume;
             }
         });
         // 音量条事件
@@ -382,14 +386,13 @@ class LimPlayer {
                 // console.log(widthDifference);
                 // console.log(widthDifference / playbackProgressBar.offsetWidth);
                 const precent = widthDifference / playbackProgressBar.offsetWidth;
-                if(precent > 1 || precent < 0) return;
+                if (precent > 1 || precent < 0) return;
                 const current = percentToSecond(precent, this.audio!.duration);
                 second = current.second;
                 this.elements!.nowText.innerText = current.time;
                 playbackProgressNow.style.width = (precent * 100).toString() + "%";
             };
             const upHandler = () => {
-                // localStorage.setItem("lim_player_volume", String(this.options.volume!));
                 document.removeEventListener("mousemove", moveHandler);
                 document.removeEventListener("mouseup", upHandler);
                 removeClass(playbackPointer, "pointer-active");
