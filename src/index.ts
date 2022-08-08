@@ -300,11 +300,11 @@ class LimPlayer {
         // 音量按钮点击事件
         this.elements.volumeButton.addEventListener("click", () => {
             const volume = PlayerStorage.getVolume() || (defaultOptions.volume as number);
-            const _volume = volume !== 0 ? volume : 50;
+            const _volume = volume !== 0 ? volume : 0.5;
 
             if (this.options.volume === 0) {
                 hide(muteSvg);
-                if (_volume > 50) {
+                if (_volume > 0.5) {
                     show(highVolumeSvg);
                 } else {
                     show(mediumVolumeSvg);
@@ -317,7 +317,7 @@ class LimPlayer {
                 this.options.volume = 0;
             }
             this.saveOptionsStorage();
-            volumeProgressNow.style.width = String(this.options.volume) + "%";
+            volumeProgressNow.style.width = String(this.options.volume * 100) + "%";
             if (this.audio) {
                 this.audio.volume = this.options.volume;
             }
@@ -326,8 +326,14 @@ class LimPlayer {
         volumeProgressBar.addEventListener("mousedown", (e) => {
             const moveHandler = (e: MouseEvent) => {
                 const width = e.clientX - volumeProgressBar.offsetLeft - 15;
-                if (width < 0 || width > 100) return;
-                this.options.volume = width;
+                console.log(width);
+
+                if (width < 0) {
+                    return this.options.volume === 0 ? "" : this.options.volume = 0;
+                } else if (width > 100) {
+                    return this.options.volume === 1 ? "" : this.options.volume = 1;
+                }
+                this.options.volume = width / 100;
                 if (width > 50) {
                     hide(mediumVolumeSvg);
                     hide(muteSvg);
