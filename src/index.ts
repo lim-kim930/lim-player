@@ -28,7 +28,7 @@ class LimPlayer {
         if (!element) throw new Error("No element found with id: " + el);
         this.container = element;
         this.options = this.initOptions(options);
-        this.saveOptionsStorage(true);
+        PlayerStorage.setOptions(this.options);
         localStorage.setItem("lim_player_volume", this.options.volume!.toString());
         // TODO: 检查用户输入的播放列表
         this.playList = this.initPlayList(lists);
@@ -87,15 +87,33 @@ class LimPlayer {
         }
     }
 
+    private checkOptionsValid(options: PlayerOptions, allneed = true) {
+        const keys = Object.keys(options);
+        keys.forEach((key) => {
+            if (!Object.prototype.hasOwnProperty.call(defaultOptions, key)) {
+                throw new ReferenceError("An unknown field was passed in: " + key);
+            }
+        });
+    }
+
     private initOptions(options?: PlayerOptions) {
+        const storageOptions = PlayerStorage.getOptions();
+        let _options: PlayerOptions | null;
         if (options) {
-            Object.keys(options).forEach((key) => {
-                if (!Object.prototype.hasOwnProperty.call(defaultOptions, key)) {
-                    throw new ReferenceError("An unknown field was passed in: " + key);
-                }
-            });
+            if (storageOptions) {
+                _options = options.lotp === false ? { ...defaultOptions, ...storageOptions, ...options } : { ...defaultOptions, ...options, ...storageOptions };
+            }
+            else {
+                _options = { ...defaultOptions, ...options };
+            }
+        } else {
+            if (!storageOptions) {
+                return defaultOptions;
+            }
+            _options = storageOptions;
         }
-        return options ? { ...defaultOptions, ...options } : defaultOptions;
+        this.checkOptionsValid(_options);
+        return _options;
     }
 
     private initPlayList(list: AudioConfig[] | undefined) {
@@ -164,22 +182,17 @@ class LimPlayer {
         // console.log(this.elements);
     }
 
-    private saveOptionsStorage(firstFlag = false) {
-        if (!firstFlag) return localStorage.setItem("lim_player_options", JSON.stringify(this.options));
-        const options = localStorage.getItem("lim_player_options");
-        let _options: PlayerOptions;
-        if (options) {
-            _options = { ...JSON.parse(options), ...this.options } as PlayerOptions;
-        } else {
-            _options = this.initOptions(this.options);
-        }
-        localStorage.setItem("lim_player_options", JSON.stringify(_options));
-    }
-
-    private getOptionsStorage() {
-        const options = localStorage.getItem("lim_player_options");
-        return options ? JSON.parse(options) as PlayerOptions : this.options;
-    }
+    // private saveOptionsStorage(firstFlag = false) {
+    //     if (!firstFlag) return localStorage.setItem("lim_player_options", JSON.stringify(this.options));
+    //     const options = localStorage.getItem("lim_player_options");
+    //     let _options: PlayerOptions;
+    //     if (options) {
+    //         _options = { ...JSON.parse(options), ...this.options } as PlayerOptions;
+    //     } else {
+    //         _options = this.initOptions(this.options);
+    //     }
+    //     localStorage.setItem("lim_player_options", JSON.stringify(_options));
+    // }
 
     private setLikedUI() {
         const likedSvg = this.elements!.likedSvg;
@@ -253,6 +266,7 @@ class LimPlayer {
                 show(shufflePointer);
             }
             this.options.shuffle = !this.options.shuffle;
+            PlayerStorage.setOptions(this.options);
         });
         // 循环按钮点击事件
         this.elements.loopButtton.addEventListener("click", () => {
@@ -263,26 +277,23 @@ class LimPlayer {
                     oldSvg = singleLoopSvg;
                     newSvg = listLoopSvg;
                     this.options.loopType = "none";
-                    if (this.audio) {
-                        this.audio.loop = false;
-                    }
                     break;
                 case "list":
                     oldSvg = listLoopSvg;
                     newSvg = singleLoopSvg;
                     this.options.loopType = "single";
-                    if (this.audio) {
-                        this.audio.loop = true;
-                    }
                     break;
-                default:
+                case "none":
                     addClass(listLoopSvg, "animate_beat", "checked");
                     show(loopPointer);
                     this.options.loopType = "list";
-                    if (this.audio) {
-                        this.audio.loop = false;
-                    }
-                    return;
+            }
+            PlayerStorage.setOptions(this.options);
+            if (this.audio) {
+                this.audio.loop = this.options.loopType === "single";
+            }
+            if (this.options.loopType === "list") {
+                return;
             }
             hide(oldSvg);
             removeClass(oldSvg, "animate_beat", "checked");
@@ -299,27 +310,30 @@ class LimPlayer {
         });
         // 音量按钮点击事件
         this.elements.volumeButton.addEventListener("click", () => {
-            const volume = PlayerStorage.getVolume() || (defaultOptions.volume as number);
+            const volume = this.options.volume!;
+            // 取消静音以后要恢复到的值
             const _volume = volume !== 0 ? volume : 0.5;
-
-            if (this.options.volume === 0) {
+            let volumeToSet: number;
+            if (this.options.mute) {
                 hide(muteSvg);
                 if (_volume > 0.5) {
                     show(highVolumeSvg);
                 } else {
                     show(mediumVolumeSvg);
                 }
-                this.options.volume = _volume;
+                volumeToSet = _volume;
+                this.options.mute = false;
             } else {
                 hide(mediumVolumeSvg);
                 hide(highVolumeSvg);
                 show(muteSvg);
-                this.options.volume = 0;
+                volumeToSet = 0;
+                this.options.mute = true;
             }
-            this.saveOptionsStorage();
-            volumeProgressNow.style.width = String(this.options.volume * 100) + "%";
+            PlayerStorage.setOptions(this.options);
+            volumeProgressNow.style.width = String(volumeToSet * 100) + "%";
             if (this.audio) {
-                this.audio.volume = this.options.volume;
+                this.audio.volume = volumeToSet;
             }
         });
         // 音量条事件
@@ -327,7 +341,7 @@ class LimPlayer {
             const moveHandler = (e: MouseEvent) => {
                 const width = e.clientX - volumeProgressBar.offsetLeft - 15;
                 if (width > 50) {
-                    this.options.volume = (width > 100 ? 100 : width) / 100;
+                    this.options.volume = width > 100 ? 1 : width / 100;
                     hide(mediumVolumeSvg);
                     hide(muteSvg);
                     show(highVolumeSvg);
@@ -342,6 +356,7 @@ class LimPlayer {
                     hide(highVolumeSvg);
                     show(mediumVolumeSvg);
                 }
+                PlayerStorage.setOptions(this.options);
                 volumeProgressNow.style.width = String(width) + "px";
                 if (this.audio) {
                     this.audio.volume = this.options.volume;

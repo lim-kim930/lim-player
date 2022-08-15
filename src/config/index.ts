@@ -8,7 +8,9 @@ const defaultOptions: PlayerOptions = {
     loopType: "none",
     shuffle: false,
     theme: "default",
-    volume: 0.3
+    volume: 0.3,
+    mute: false,
+    lotp: true
 };
 
 const defaultSongConfig: AudioConfig = {
