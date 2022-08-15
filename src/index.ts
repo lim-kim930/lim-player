@@ -326,30 +326,25 @@ class LimPlayer {
         volumeProgressBar.addEventListener("mousedown", (e) => {
             const moveHandler = (e: MouseEvent) => {
                 const width = e.clientX - volumeProgressBar.offsetLeft - 15;
-                console.log(width);
-
-                if (width < 0) {
-                    return this.options.volume === 0 ? "" : this.options.volume = 0;
-                } else if (width > 100) {
-                    return this.options.volume === 1 ? "" : this.options.volume = 1;
-                }
-                this.options.volume = width / 100;
                 if (width > 50) {
+                    this.options.volume = (width > 100 ? 100 : width) / 100;
                     hide(mediumVolumeSvg);
                     hide(muteSvg);
                     show(highVolumeSvg);
-                } else if (width === 0) {
+                } else if (width <= 0) {
+                    this.options.volume = 0;
                     hide(highVolumeSvg);
                     hide(mediumVolumeSvg);
                     show(muteSvg);
                 } else {
+                    this.options.volume = width / 100;
                     hide(muteSvg);
                     hide(highVolumeSvg);
                     show(mediumVolumeSvg);
                 }
                 volumeProgressNow.style.width = String(width) + "px";
                 if (this.audio) {
-                    this.audio.volume = width / 100;
+                    this.audio.volume = this.options.volume;
                 }
             };
             const upHandler = () => {
