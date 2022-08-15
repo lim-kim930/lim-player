@@ -182,18 +182,6 @@ class LimPlayer {
         // console.log(this.elements);
     }
 
-    // private saveOptionsStorage(firstFlag = false) {
-    //     if (!firstFlag) return localStorage.setItem("lim_player_options", JSON.stringify(this.options));
-    //     const options = localStorage.getItem("lim_player_options");
-    //     let _options: PlayerOptions;
-    //     if (options) {
-    //         _options = { ...JSON.parse(options), ...this.options } as PlayerOptions;
-    //     } else {
-    //         _options = this.initOptions(this.options);
-    //     }
-    //     localStorage.setItem("lim_player_options", JSON.stringify(_options));
-    // }
-
     private setLikedUI() {
         const likedSvg = this.elements!.likedSvg;
         const unlikeSvg = this.elements!.unlikeSvg;
