@@ -37,5 +37,8 @@ export interface PlayerOptions {
     // 音量, 1-100的整数
     volume?: number;
     // 存储信息localstorage的字段名
-
+    // 静音
+    mute?: boolean;
+    // Local configuration takes precedence
+    lotp?: boolean;
 }
