@@ -83,6 +83,7 @@ class LimPlayer {
             this.elements!.audioArtist.innerText = audio.artist || "unkown";
             this.elements!.audioCover.setAttribute("src", audio.cover || "");
             this.setLikedUI();
+            // TODO: 加载动画 加载的时候进度条跳动问题
             console.log("loading");
         }
     }
