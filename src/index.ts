@@ -504,6 +504,7 @@ class LimPlayer {
 
     play() {
         if (!this.audio) return;
+        addClass(this.elements!.pauseSvg, "animate_beat");
         this.audio.play().then(() => {
             if (this.audio!.autoplay) return;
             this.playHandler();
@@ -514,6 +515,7 @@ class LimPlayer {
 
     pause() {
         if (!this.audio) return;
+        addClass(this.elements!.playSvg, "animate_beat");
         this.audio.pause();
         hide(this.elements!.pauseSvg);
         show(this.elements!.playSvg);
