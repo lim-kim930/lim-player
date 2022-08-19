@@ -31,4 +31,8 @@ const percentToSecond = (precent: number, duration: number) => {
     return { second, time };
 };
 
-export { hide, show, addClass, removeClass, secondToTime, percentToSecond };
+const getElement = (id: string) => {
+    return document.querySelector("#" + id) as HTMLElement;
+};
+
+export { hide, show, addClass, removeClass, secondToTime, percentToSecond, getElement };

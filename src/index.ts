@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+//TODO: use less
 import "./assets/index.css";
 import PlayerTemplete from "./playerTemplate";
-import { hide, show, addClass, removeClass, secondToTime, percentToSecond } from "./utils";
+import { hide, show, addClass, removeClass, secondToTime, percentToSecond, getElement } from "./utils";
 import { PlayerOptions, AudioConfig } from "./types";
 import PlayerStorage from "./storage";
 import { defaultOptions, defaultSongConfig } from "./config";
@@ -15,7 +16,7 @@ class LimPlayer {
     playing: AudioConfig | null;
     private playbackTimer: number | undefined;
     private controlTimer: number | undefined;
-    elements: { [key: string]: HTMLElement } | undefined;
+    elements: { [key: string]: HTMLElement };
     private audio: HTMLAudioElement | undefined;
     constructor(el: string, options?: PlayerOptions, lists?: AudioConfig[]) {
         // 播放器数量
@@ -38,7 +39,7 @@ class LimPlayer {
         addClass(element, "limplayer");
         element.setAttribute("id", this.playerID);
         element.innerHTML = templete.content;
-        this.initElements();
+        this.elements =  this.initElements();
         this.initAudioElement();
         this.initEvents();
     }
@@ -57,7 +58,7 @@ class LimPlayer {
             // console.log(this.audio!.currentTime);
             // console.log(this.audio!.duration);
             if (this.audio!.duration) {
-                this.elements!.durationText.innerText = secondToTime(this.audio!.duration);
+                this.elements.durationText.innerText = secondToTime(this.audio!.duration);
             }
         });
         if (this.audio.autoplay) {
@@ -79,9 +80,9 @@ class LimPlayer {
             audio = this.playing;
         if (this.audio && audio) {
             this.audio.src = audio.src;
-            this.elements!.audioName.innerText = audio.name || "unkown";
-            this.elements!.audioArtist.innerText = audio.artist || "unkown";
-            this.elements!.audioCover.setAttribute("src", audio.cover || "");
+            this.elements.audioName.innerText = audio.name || "unkown";
+            this.elements.audioArtist.innerText = audio.artist || "unkown";
+            this.elements.audioCover.setAttribute("src", audio.cover || "");
             this.setLikedUI();
             // TODO: 加载动画 加载的时候进度条跳动问题
             console.log("loading");
@@ -133,44 +134,45 @@ class LimPlayer {
 
     private initElements() {
         // info
-        const audioCover = document.querySelector("#" + this.playerID + " .limplayer-info .cover img") as HTMLElement;
-        const audioArtist = document.querySelector("#" + this.playerID + " .info .artist a") as HTMLElement;
-        const audioName = document.querySelector("#" + this.playerID + " .info .name a") as HTMLElement;
+        
+        const audioCover = getElement(this.playerID + " .limplayer-info .cover img");
+        const audioArtist = getElement(this.playerID + " .info .artist a");
+        const audioName = getElement(this.playerID + " .info .name a");
         // like
-        const likedSvg = document.querySelector("#" + this.playerID + " .like .liked") as HTMLElement;
-        const likeButton = document.querySelector("#" + this.playerID + " .like button") as HTMLElement;
-        const unlikeSvg = document.querySelector("#" + this.playerID + " .like .unliked") as HTMLElement;
+        const likedSvg = getElement(this.playerID + " .like .liked");
+        const likeButton = getElement(this.playerID + " .like button");
+        const unlikeSvg = getElement(this.playerID + " .like .unliked");
         // shuffle
-        const shuffleSvg = document.querySelector("#" + this.playerID + " .shuffle svg") as HTMLElement;
-        const shuffleButton = document.querySelector("#" + this.playerID + " .shuffle") as HTMLElement;
-        const shufflePointer = document.querySelector("#" + this.playerID + " .shuffle .pointer") as HTMLElement;
+        const shuffleSvg = getElement(this.playerID + " .shuffle svg");
+        const shuffleButton = getElement(this.playerID + " .shuffle");
+        const shufflePointer = getElement(this.playerID + " .shuffle .pointer");
         // loop
-        const listLoopSvg = document.querySelector("#" + this.playerID + " .loop .list") as HTMLElement;
-        const singleLoopSvg = document.querySelector("#" + this.playerID + " .loop .single") as HTMLElement;
-        const loopButtton = document.querySelector("#" + this.playerID + " .loop") as HTMLElement;
-        const loopPointer = document.querySelector("#" + this.playerID + " .loop .pointer") as HTMLElement;
+        const listLoopSvg = getElement(this.playerID + " .loop .list");
+        const singleLoopSvg = getElement(this.playerID + " .loop .single");
+        const loopButtton = getElement(this.playerID + " .loop");
+        const loopPointer = getElement(this.playerID + " .loop .pointer");
         // volume
-        const muteSvg = document.querySelector("#" + this.playerID + " .volume .mute") as HTMLElement;
-        const mediumVolumeSvg = document.querySelector("#" + this.playerID + " .volume .medium") as HTMLElement;
-        const highVolumeSvg = document.querySelector("#" + this.playerID + " .volume .high") as HTMLElement;
-        const volumeButton = document.querySelector("#" + this.playerID + " .volume button") as HTMLElement;
-        const volumeProgressNow = document.querySelector("#" + this.playerID + " .volume .now") as HTMLElement;
-        const volumeProgressBar = document.querySelector("#" + this.playerID + " .volume .progressbar") as HTMLElement;
-        const volumePointer = document.querySelector("#" + this.playerID + " .volume .pointer") as HTMLElement;
+        const muteSvg = getElement(this.playerID + " .volume .mute");
+        const mediumVolumeSvg = getElement(this.playerID + " .volume .medium");
+        const highVolumeSvg = getElement(this.playerID + " .volume .high");
+        const volumeButton = getElement(this.playerID + " .volume button");
+        const volumeProgressNow = getElement(this.playerID + " .volume .now");
+        const volumeProgressBar = getElement(this.playerID + " .volume .progressbar");
+        const volumePointer = getElement(this.playerID + " .volume .pointer");
         // progressbar
-        const durationText = document.querySelector("#" + this.playerID + " .playback .duration span") as HTMLElement;
-        const nowText = document.querySelector("#" + this.playerID + " .playback .now-position span") as HTMLElement;
-        const playbackProgressBar = document.querySelector("#" + this.playerID + " .playback .progressbar") as HTMLElement;
-        const playbackPointer = document.querySelector("#" + this.playerID + " .playback .pointer") as HTMLElement;
-        const playbackProgressNow = document.querySelector("#" + this.playerID + " .playback .now") as HTMLElement;
+        const durationText = getElement(this.playerID + " .playback .duration span");
+        const nowText = getElement(this.playerID + " .playback .now-position span");
+        const playbackProgressBar = getElement(this.playerID + " .playback .progressbar");
+        const playbackPointer = getElement(this.playerID + " .playback .pointer");
+        const playbackProgressNow = getElement(this.playerID + " .playback .now");
         // play control button
-        const playSvg = document.querySelector("#" + this.playerID + " .controls-playpause .play") as HTMLElement;
-        const pauseSvg = document.querySelector("#" + this.playerID + " .controls-playpause .pause") as HTMLElement;
-        const playButton = document.querySelector("#" + this.playerID + " .controls-playpause button") as HTMLElement;
-        const preButton = document.querySelector("#" + this.playerID + " .controls-left .pre") as HTMLElement;
-        const nextButton = document.querySelector("#" + this.playerID + " .controls-right .next") as HTMLElement;
+        const playSvg = getElement(this.playerID + " .controls-playpause .play");
+        const pauseSvg = getElement(this.playerID + " .controls-playpause .pause");
+        const playButton = getElement(this.playerID + " .controls-playpause button");
+        const preButton = getElement(this.playerID + " .controls-left .pre");
+        const nextButton = getElement(this.playerID + " .controls-right .next");
 
-        this.elements = {
+        return {
             audioCover, audioArtist,
             likedSvg, unlikeSvg, likeButton, audioName,
             shuffleSvg, shuffleButton, shufflePointer,
@@ -184,8 +186,8 @@ class LimPlayer {
     }
 
     private setLikedUI() {
-        const likedSvg = this.elements!.likedSvg;
-        const unlikeSvg = this.elements!.unlikeSvg;
+        const likedSvg = this.elements.likedSvg;
+        const unlikeSvg = this.elements.unlikeSvg;
         if (this.playing!.liked) {
             hide(unlikeSvg);
             show(likedSvg);
@@ -394,7 +396,7 @@ class LimPlayer {
                 if (precent > 1 || precent < 0) return;
                 const current = percentToSecond(precent, this.audio!.duration);
                 second = current.second;
-                this.elements!.nowText.innerText = current.time;
+                this.elements.nowText.innerText = current.time;
                 playbackProgressNow.style.width = (precent * 100).toString() + "%";
             };
             const upHandler = () => {
@@ -463,8 +465,8 @@ class LimPlayer {
         }
 
         this.initAudio();
-        this.elements!.nowText.innerText = "0:00";
-        this.elements!.playbackProgressNow.style.width = "0";
+        this.elements.nowText.innerText = "0:00";
+        this.elements.playbackProgressNow.style.width = "0";
         this.autoplayHelper();
     }
 
@@ -473,8 +475,8 @@ class LimPlayer {
         const index = this.playing.index as number;
         const length = this.playList.length;
 
-        this.elements!.nowText.innerText = "0:00";
-        this.elements!.playbackProgressNow.style.width = "0";
+        this.elements.nowText.innerText = "0:00";
+        this.elements.playbackProgressNow.style.width = "0";
         if (index === length - 1 || length === 1) {
             return;
         } else {
@@ -504,7 +506,7 @@ class LimPlayer {
 
     play() {
         if (!this.audio) return;
-        addClass(this.elements!.pauseSvg, "animate_beat");
+        addClass(this.elements.pauseSvg, "animate_beat");
         this.audio.play().then(() => {
             if (this.audio!.autoplay) return;
             this.playHandler();
@@ -515,27 +517,27 @@ class LimPlayer {
 
     pause() {
         if (!this.audio) return;
-        addClass(this.elements!.playSvg, "animate_beat");
+        addClass(this.elements.playSvg, "animate_beat");
         this.audio.pause();
-        hide(this.elements!.pauseSvg);
-        show(this.elements!.playSvg);
+        hide(this.elements.pauseSvg);
+        show(this.elements.playSvg);
     }
 
     playHandler() {
-        hide(this.elements!.playSvg);
-        show(this.elements!.pauseSvg);
+        hide(this.elements.playSvg);
+        show(this.elements.pauseSvg);
         if (this.playbackTimer) return;
 
         const endHnadler = () => {
-            hide(this.elements!.pauseSvg);
-            show(this.elements!.playSvg);
+            hide(this.elements.pauseSvg);
+            show(this.elements.playSvg);
             if (this.playbackTimer) {
 
                 clearInterval(this.playbackTimer);
                 this.playbackTimer = undefined;
 
-                this.elements!.nowText.innerText = secondToTime(this.audio!.duration);
-                this.elements!.playbackProgressNow.style.width = "100%";
+                this.elements.nowText.innerText = secondToTime(this.audio!.duration);
+                this.elements.playbackProgressNow.style.width = "100%";
             }
 
             // 有下一曲? TODO: 按照循环类型做判断
@@ -561,8 +563,8 @@ class LimPlayer {
             const currentTime = this.audio!.currentTime;
             // console.log(currentTime);
 
-            this.elements!.nowText.innerText = secondToTime(currentTime);
-            this.elements!.playbackProgressNow.style.width = (currentTime / this.audio!.duration * 100).toString() + "%";
+            this.elements.nowText.innerText = secondToTime(currentTime);
+            this.elements.playbackProgressNow.style.width = (currentTime / this.audio!.duration * 100).toString() + "%";
             if (currentTime === this.audio!.duration) {
                 clearInterval(this.playbackTimer);
                 this.playbackTimer = undefined;
