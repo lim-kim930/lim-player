@@ -14,6 +14,7 @@ class LimPlayer {
     options: PlayerOptions;
     playList: AudioConfig[];
     playing: AudioConfig | null;
+    private isLoaing = false;
     private playbackTimer: number | undefined;
     private controlTimer: number | undefined;
     elements: { [key: string]: HTMLElement };
@@ -29,6 +30,7 @@ class LimPlayer {
         if (!element) throw new Error("No element found with id: " + el);
         this.container = element;
         this.options = this.initOptions(options);
+        // 使用initialTime配合storage可以从上次播放位置继续播放
         PlayerStorage.setOptions(this.options);
         localStorage.setItem("lim_player_volume", this.options.volume!.toString());
         // TODO: 检查用户输入的播放列表
@@ -51,12 +53,19 @@ class LimPlayer {
         this.audio.loop = this.options.loopType === "single";
         this.audio.volume = this.options.volume!;
         this.audio.src = this.playing!.src;
+        setInterval(()=>{
+            // if(this.audio!.networkState === 2 && !this.isLoaing) {
+            //     console.log("start loading");
+            //     this.isLoaing = true;
+            // } else if(this.audio!.networkState !== 2 && this.isLoaing){
+            //     this.isLoaing = false;
+            //     console.log("stop loading");
+            // }
+        }, 100);
         this.audio.addEventListener("canplay", () => {
             // this.audio!.play().catch((err)=>{
             //     throw err;
             // });
-            // console.log(this.audio!.currentTime);
-            // console.log(this.audio!.duration);
             if (this.audio!.duration) {
                 this.elements.durationText.innerText = secondToTime(this.audio!.duration);
             }
@@ -89,7 +98,7 @@ class LimPlayer {
         }
     }
 
-    private checkOptionsValid(options: PlayerOptions, allneed = true) {
+    private checkOptionsValid(options: PlayerOptions) {
         const keys = Object.keys(options);
         keys.forEach((key) => {
             if (!Object.prototype.hasOwnProperty.call(defaultOptions, key)) {
@@ -383,6 +392,7 @@ class LimPlayer {
             }
         });
         // 播放进度条事件
+        // TODO: 拖动进度条和播放的进度条走动冲突
         playbackProgressBar.addEventListener("mousedown", (e) => {
             if (!this.audio) return;
             let second: number;
