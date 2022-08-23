@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { PlayerOptions, AudioConfig } from "../types";
 
 export default class PlayerTemplete {
@@ -57,6 +58,7 @@ export default class PlayerTemplete {
                         <svg class="play" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="14100" width="36" height="36"><path d="M512 42.666667C252.793333 42.666667 42.666667 252.793333 42.666667 512s210.126667 469.333333 469.333333 469.333333 469.333333-210.126667 469.333333-469.333333S771.206667 42.666667 512 42.666667z m196.546667 500.493333l-266.666667 176A37.333333 37.333333 0 0 1 384 688V336.033333a37.333333 37.333333 0 0 1 57.893333-31.16l266.666667 176a37.333333 37.333333 0 0 1 0 62.32z" fill="#707070" p-id="14101"></path></svg>
                         <svg style="display: none;" class="pause" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="14531" width="36" height="36"><path d="M512 42.666667a469.333333 469.333333 0 1 0 469.333333 469.333333A469.333333 469.333333 0 0 0 512 42.666667z m-47.466667 611.893333a37.333333 37.333333 0 0 1-74.666666 0V369.44a37.333333 37.333333 0 0 1 74.666666 0z m169.6 0a37.333333 37.333333 0 1 1-74.666666 0V369.44a37.333333 37.333333 0 0 1 74.666666 0z" p-id="14532" fill="#707070"></path></svg>
                     </button>
+                    <svg class="player-loaing" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="16605" width="55" height="55"><path d="M512 170.666667v85.333333a256 256 0 1 1-223.573333 131.2L213.930667 345.6A341.333333 341.333333 0 1 0 512 170.666667z" fill="#000000" opacity=".3" p-id="16606"></path></svg>
                 </div>
                 <div class="controls-right">
                     <button class="next">

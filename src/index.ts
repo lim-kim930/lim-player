@@ -62,12 +62,12 @@ class LimPlayer {
             const len = this.audio!.buffered.length;
             // TODO: 通过buffered.length展示分段加载进度
             if (len !== 0) {
-                console.log(len);
-                let i = 0;
-                while (i < len) {
-                    console.log(this.audio!.buffered.end(i));
-                    i++;
-                }
+                // console.log(len);
+                // let i = 0;
+                // while (i < len) {
+                //     console.log(this.audio!.buffered.end(i));
+                //     i++;
+                // }
 
                 const bufferd = this.audio!.buffered.end(len - 1);
                 if (this.bufferd !== this.audio!.buffered.end(len - 1)) {
@@ -79,10 +79,6 @@ class LimPlayer {
             }
             if (this.audio!.networkState === 2 && !this.isLoaing) {
                 console.log("start loading");
-                // this.elements.playbackPointer.style.width = "14px";
-                // this.elements.playbackPointer.style.height = "14px";
-                // this.elements.playbackPointer.style.top = "-5px";
-                // this.elements.playbackPointer.style.right = "-5px";
                 this.isLoaing = true;
             } else if (this.audio!.networkState !== 2 && this.isLoaing) {
                 this.isLoaing = false;
@@ -372,7 +368,6 @@ class LimPlayer {
             }
         });
         // 播放进度条事件
-        // TODO: 拖动进度条和播放的进度条走动冲突
         playbackProgressBar.addEventListener("mousedown", (e) => {
             if (!this.audio) return;
             this.progressMoveLock = true;
@@ -429,6 +424,7 @@ class LimPlayer {
         }
     }
 
+    // TODO: 下一曲或上一曲是什么要根据列表长和loop来先判断
     private preAndNextHandler(nextFlag = false) {
         if (!this.playing) return;
         this.pause();
@@ -552,11 +548,11 @@ class LimPlayer {
             const currentTime = this.audio!.currentTime;
             // console.log(currentTime);
 
-            if (!this.progressMoveLock) { 
+            if (!this.progressMoveLock) {
                 this.elements.nowText.innerText = secondToTime(currentTime);
                 this.elements.playbackProgressNow.style.width = (currentTime / this.audio!.duration * 100).toString() + "%";
             }
-            
+
             if (currentTime === this.audio!.duration) {
                 clearInterval(this.playbackTimer);
                 this.playbackTimer = undefined;
@@ -566,8 +562,10 @@ class LimPlayer {
         this.audio!.addEventListener("ended", endHnadler);
     }
 
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
     private likeChanged(value: "liked" | "unlike", audio: AudioConfig) { }
 
+    // eslint-disable-next-line no-unused-vars
     onLikeChanged(callback: (value: "liked" | "unlike", audio: AudioConfig) => void) {
         this.likeChanged = callback;
     }
