@@ -78,6 +78,7 @@ export default class PlayerTemplete {
                         <span class="now">
                             <span class="pointer"></span>
                         </span>
+                        <span class="buffered"></span>
                     </span>
                 </div>
                 <div class="duration">

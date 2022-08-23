@@ -192,7 +192,7 @@
 
 .limplayer .limplayer-side-controller .container .volume .progressbar .total,
 .limplayer .limplayer-main-controller .container .playback .progressbar .total {
-    background-color: #afafaf;
+    background-color: #cacaca;
     width: 100%;
 }
 
@@ -214,9 +214,17 @@
 
 .limplayer .limplayer-side-controller .container .volume .progressbar .now,
 .limplayer .limplayer-main-controller .container .playback .progressbar .now {
-    background: #8680df;
+    background: #a09aeb;
     top: 0;
-    transition: background-color 300ms, width 50ms;
+    transition: background-color 300ms;
+    max-width: 100%;
+    z-index: 1;
+}
+
+.limplayer .limplayer-main-controller .container .playback .progressbar .buffered {
+    z-index: 0;
+    background: #b4b4b4;
+    top: 0;
     max-width: 100%;
 }
 
@@ -224,7 +232,7 @@
 .limplayer .limplayer-main-controller .container .playback .progressbar:hover .now,
 .limplayer .limplayer-side-controller .container .volume .progressbar .now-active,
 .limplayer .limplayer-main-controller .container .playback .progressbar .now-active {
-    background-color: #df8080;
+    background-color: #8680df;
 }
 
 .limplayer .limplayer-main-controller .container .playback .progressbar:hover .pointer,
