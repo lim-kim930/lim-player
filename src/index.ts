@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+//TODO: use less
 import "./assets/index.css";
 import PlayerTemplete from "./playerTemplate";
-import { hide, show, addClass, removeClass, secondToTime, percentToSecond } from "./utils";
+import { hide, show, addClass, removeClass, secondToTime, percentToSecond, initElements } from "./utils";
 import { PlayerOptions, AudioConfig } from "./types";
 import PlayerStorage from "./storage";
 import { defaultOptions, defaultSongConfig } from "./config";
@@ -13,9 +14,13 @@ class LimPlayer {
     options: PlayerOptions;
     playList: AudioConfig[];
     playing: AudioConfig | null;
+    private isLoaing = false;
+    private bufferd = 0;
     private playbackTimer: number | undefined;
     private controlTimer: number | undefined;
-    elements: { [key: string]: HTMLElement } | undefined;
+    private loadingCheckTimer: number | undefined;
+    private progressMoveLock: boolean | undefined;
+    elements: { [key: string]: HTMLElement };
     private audio: HTMLAudioElement | undefined;
     constructor(el: string, options?: PlayerOptions, lists?: AudioConfig[]) {
         // 播放器数量
@@ -28,17 +33,19 @@ class LimPlayer {
         if (!element) throw new Error("No element found with id: " + el);
         this.container = element;
         this.options = this.initOptions(options);
+        // 使用initialTime配合storage可以从上次播放位置继续播放
         PlayerStorage.setOptions(this.options);
         localStorage.setItem("lim_player_volume", this.options.volume!.toString());
         // TODO: 检查用户输入的播放列表
         this.playList = this.initPlayList(lists);
         this.playing = this.playList[0] || null;
+        // TODO: 根据专辑颜色或options里的主题，更改.playback .progressbar .now的背景色
         const templete = new PlayerTemplete(this.options, this.playing);
         this.playerID = templete.id;
         addClass(element, "limplayer");
         element.setAttribute("id", this.playerID);
         element.innerHTML = templete.content;
-        this.initElements();
+        this.elements = initElements(this.playerID);
         this.initAudioElement();
         this.initEvents();
     }
@@ -50,14 +57,42 @@ class LimPlayer {
         this.audio.loop = this.options.loopType === "single";
         this.audio.volume = this.options.volume!;
         this.audio.src = this.playing!.src;
+        this.loadingCheckTimer = window.setInterval(() => {
+            // console.log(this.audio!.networkState);
+            const len = this.audio!.buffered.length;
+            // TODO: 通过buffered.length展示分段加载进度
+            if (len !== 0) {
+                // console.log(len);
+                // let i = 0;
+                // while (i < len) {
+                //     console.log(this.audio!.buffered.end(i));
+                //     i++;
+                // }
+
+                const bufferd = this.audio!.buffered.end(len - 1);
+                if (this.bufferd !== this.audio!.buffered.end(len - 1)) {
+                    this.bufferd = bufferd;
+                    // console.log(this.audio!.buffered.end(len - 1));
+                    this.elements.playbackProgressBuffered.style.width = Math.trunc(this.bufferd * 100 / this.audio!.duration).toString() + "%";
+                }
+
+            }
+            if (this.audio!.networkState === 2 && !this.isLoaing) {
+                console.log("start loading");
+                this.elements.loadingSvg.style.display = "inline-block";
+                this.isLoaing = true;
+            } else if (this.audio!.networkState !== 2 && this.isLoaing) {
+                this.elements.loadingSvg.style.display = "none";
+                this.isLoaing = false;
+                console.log("stop loading");
+            }
+        }, 100);
         this.audio.addEventListener("canplay", () => {
             // this.audio!.play().catch((err)=>{
             //     throw err;
             // });
-            // console.log(this.audio!.currentTime);
-            // console.log(this.audio!.duration);
             if (this.audio!.duration) {
-                this.elements!.durationText.innerText = secondToTime(this.audio!.duration);
+                this.elements.durationText.innerText = secondToTime(this.audio!.duration);
             }
         });
         if (this.audio.autoplay) {
@@ -79,15 +114,21 @@ class LimPlayer {
             audio = this.playing;
         if (this.audio && audio) {
             this.audio.src = audio.src;
-            this.elements!.audioName.innerText = audio.name || "unkown";
-            this.elements!.audioArtist.innerText = audio.artist || "unkown";
-            this.elements!.audioCover.setAttribute("src", audio.cover || "");
+            this.elements.audioName.innerText = audio.name || "unkown";
+            this.elements.audioArtist.innerText = audio.artist || "unkown";
+            this.elements.audioCover.setAttribute("src", audio.cover || "");
             this.setLikedUI();
+            // TODO: 加载动画 加载的时候进度条跳动问题
             console.log("loading");
         }
+        this.elements.nowText.innerText = "0:00";
+        this.elements.durationText.innerText = "loading...";
+        this.elements.playbackProgressNow.style.width = "0";
+        this.elements.playbackProgressBuffered.style.width = "0";
+        this.autoplayHelper();
     }
 
-    private checkOptionsValid(options: PlayerOptions, allneed = true) {
+    private checkOptionsValid(options: PlayerOptions) {
         const keys = Object.keys(options);
         keys.forEach((key) => {
             if (!Object.prototype.hasOwnProperty.call(defaultOptions, key)) {
@@ -130,61 +171,9 @@ class LimPlayer {
         return list;
     }
 
-    private initElements() {
-        // info
-        const audioCover = document.querySelector("#" + this.playerID + " .limplayer-info .cover img") as HTMLElement;
-        const audioArtist = document.querySelector("#" + this.playerID + " .info .artist a") as HTMLElement;
-        const audioName = document.querySelector("#" + this.playerID + " .info .name a") as HTMLElement;
-        // like
-        const likedSvg = document.querySelector("#" + this.playerID + " .like .liked") as HTMLElement;
-        const likeButton = document.querySelector("#" + this.playerID + " .like button") as HTMLElement;
-        const unlikeSvg = document.querySelector("#" + this.playerID + " .like .unliked") as HTMLElement;
-        // shuffle
-        const shuffleSvg = document.querySelector("#" + this.playerID + " .shuffle svg") as HTMLElement;
-        const shuffleButton = document.querySelector("#" + this.playerID + " .shuffle") as HTMLElement;
-        const shufflePointer = document.querySelector("#" + this.playerID + " .shuffle .pointer") as HTMLElement;
-        // loop
-        const listLoopSvg = document.querySelector("#" + this.playerID + " .loop .list") as HTMLElement;
-        const singleLoopSvg = document.querySelector("#" + this.playerID + " .loop .single") as HTMLElement;
-        const loopButtton = document.querySelector("#" + this.playerID + " .loop") as HTMLElement;
-        const loopPointer = document.querySelector("#" + this.playerID + " .loop .pointer") as HTMLElement;
-        // volume
-        const muteSvg = document.querySelector("#" + this.playerID + " .volume .mute") as HTMLElement;
-        const mediumVolumeSvg = document.querySelector("#" + this.playerID + " .volume .medium") as HTMLElement;
-        const highVolumeSvg = document.querySelector("#" + this.playerID + " .volume .high") as HTMLElement;
-        const volumeButton = document.querySelector("#" + this.playerID + " .volume button") as HTMLElement;
-        const volumeProgressNow = document.querySelector("#" + this.playerID + " .volume .now") as HTMLElement;
-        const volumeProgressBar = document.querySelector("#" + this.playerID + " .volume .progressbar") as HTMLElement;
-        const volumePointer = document.querySelector("#" + this.playerID + " .volume .pointer") as HTMLElement;
-        // progressbar
-        const durationText = document.querySelector("#" + this.playerID + " .playback .duration span") as HTMLElement;
-        const nowText = document.querySelector("#" + this.playerID + " .playback .now-position span") as HTMLElement;
-        const playbackProgressBar = document.querySelector("#" + this.playerID + " .playback .progressbar") as HTMLElement;
-        const playbackPointer = document.querySelector("#" + this.playerID + " .playback .pointer") as HTMLElement;
-        const playbackProgressNow = document.querySelector("#" + this.playerID + " .playback .now") as HTMLElement;
-        // play control button
-        const playSvg = document.querySelector("#" + this.playerID + " .controls-playpause .play") as HTMLElement;
-        const pauseSvg = document.querySelector("#" + this.playerID + " .controls-playpause .pause") as HTMLElement;
-        const playButton = document.querySelector("#" + this.playerID + " .controls-playpause button") as HTMLElement;
-        const preButton = document.querySelector("#" + this.playerID + " .controls-left .pre") as HTMLElement;
-        const nextButton = document.querySelector("#" + this.playerID + " .controls-right .next") as HTMLElement;
-
-        this.elements = {
-            audioCover, audioArtist,
-            likedSvg, unlikeSvg, likeButton, audioName,
-            shuffleSvg, shuffleButton, shufflePointer,
-            listLoopSvg, singleLoopSvg, loopButtton, loopPointer,
-            muteSvg, mediumVolumeSvg, highVolumeSvg, volumeButton, volumeProgressNow, volumeProgressBar, volumePointer,
-            durationText, nowText, playbackProgressBar, playbackPointer, playbackProgressNow,
-            playSvg, pauseSvg, playButton,
-            preButton, nextButton
-        };
-        // console.log(this.elements);
-    }
-
     private setLikedUI() {
-        const likedSvg = this.elements!.likedSvg;
-        const unlikeSvg = this.elements!.unlikeSvg;
+        const likedSvg = this.elements.likedSvg;
+        const unlikeSvg = this.elements.unlikeSvg;
         if (this.playing!.liked) {
             hide(unlikeSvg);
             show(likedSvg);
@@ -369,6 +358,7 @@ class LimPlayer {
         this.elements.playButton.addEventListener("click", () => {
             this.playOrPause();
         });
+        // TODO: 方向键快进和后退
         // 空格播放和暂停
         document.addEventListener("keypress", (e) => {
             const element = e.target! as HTMLElement;
@@ -382,6 +372,7 @@ class LimPlayer {
         // 播放进度条事件
         playbackProgressBar.addEventListener("mousedown", (e) => {
             if (!this.audio) return;
+            this.progressMoveLock = true;
             let second: number;
             const moveHandler = (e: MouseEvent) => {
                 const widthDifference = e.clientX - playbackProgressBar.offsetLeft - 15;
@@ -390,15 +381,18 @@ class LimPlayer {
                 // console.log(widthDifference);
                 // console.log(widthDifference / playbackProgressBar.offsetWidth);
                 const precent = widthDifference / playbackProgressBar.offsetWidth;
-                if (precent > 1 || precent < 0) return;
+                if (precent > 1 || precent < 0) { return; }
+                if (isNaN(this.audio!.duration)) { return; }
                 const current = percentToSecond(precent, this.audio!.duration);
                 second = current.second;
-                this.elements!.nowText.innerText = current.time;
+                this.elements.nowText.innerText = current.time;
                 playbackProgressNow.style.width = (precent * 100).toString() + "%";
             };
             const upHandler = () => {
+                this.progressMoveLock = false;
                 document.removeEventListener("mousemove", moveHandler);
                 document.removeEventListener("mouseup", upHandler);
+                if (!second) { return; }
                 removeClass(playbackPointer, "pointer-active");
                 removeClass(playbackProgressNow, "now-active");
                 if (this.audio) {
@@ -435,7 +429,7 @@ class LimPlayer {
     private preAndNextHandler(nextFlag = false) {
         if (!this.playing) return;
         this.pause();
-        if (this.playList.length > 1) {
+        if (!this.audio!.loop && this.playList.length > 1) {
             const index = this.playing.index as number;
             const length = this.playList.length;
             if (this.options.shuffle) {
@@ -462,9 +456,6 @@ class LimPlayer {
         }
 
         this.initAudio();
-        this.elements!.nowText.innerText = "0:00";
-        this.elements!.playbackProgressNow.style.width = "0";
-        this.autoplayHelper();
     }
 
     private nextHandlerWithoutLoop() {
@@ -472,8 +463,9 @@ class LimPlayer {
         const index = this.playing.index as number;
         const length = this.playList.length;
 
-        this.elements!.nowText.innerText = "0:00";
-        this.elements!.playbackProgressNow.style.width = "0";
+        this.elements.nowText.innerText = "0:00";
+        this.elements.playbackProgressNow.style.width = "0";
+        // 没有循环，所以到了最后一首，停止播放
         if (index === length - 1 || length === 1) {
             return;
         } else {
@@ -488,9 +480,9 @@ class LimPlayer {
             }
         }
         this.initAudio();
-        this.autoplayHelper();
     }
 
+    // TODO: 连续暂停/播放，时间精度问题
     private playOrPause() {
         if (!this.audio) return;
         // TODO: 使用worker
@@ -503,6 +495,7 @@ class LimPlayer {
 
     play() {
         if (!this.audio) return;
+        addClass(this.elements.pauseSvg, "animate_small_beat");
         this.audio.play().then(() => {
             if (this.audio!.autoplay) return;
             this.playHandler();
@@ -513,40 +506,39 @@ class LimPlayer {
 
     pause() {
         if (!this.audio) return;
+        addClass(this.elements.playSvg, "animate_small_beat");
         this.audio.pause();
-        hide(this.elements!.pauseSvg);
-        show(this.elements!.playSvg);
+        hide(this.elements.pauseSvg);
+        show(this.elements.playSvg);
     }
 
     playHandler() {
-        hide(this.elements!.playSvg);
-        show(this.elements!.pauseSvg);
+        hide(this.elements.playSvg);
+        show(this.elements.pauseSvg);
         if (this.playbackTimer) return;
 
         const endHnadler = () => {
-            hide(this.elements!.pauseSvg);
-            show(this.elements!.playSvg);
+            hide(this.elements.pauseSvg);
+            show(this.elements.playSvg);
             if (this.playbackTimer) {
 
                 clearInterval(this.playbackTimer);
                 this.playbackTimer = undefined;
 
-                this.elements!.nowText.innerText = secondToTime(this.audio!.duration);
-                this.elements!.playbackProgressNow.style.width = "100%";
+                this.elements.nowText.innerText = secondToTime(this.audio!.duration);
+                this.elements.playbackProgressNow.style.width = "100%";
             }
 
-            // 有下一曲? TODO: 按照循环类型做判断
             switch (this.options.loopType) {
                 case "list":
+                case "single":
                     this.preAndNextHandler(true);
                     break;
                 case "none":
                     this.nextHandlerWithoutLoop();
-                    break;
-                case "single":
+                    break;                    
                 default:
                     break;
-
             }
             this.audio!.removeEventListener("ended", endHnadler);
         };
@@ -558,8 +550,11 @@ class LimPlayer {
             const currentTime = this.audio!.currentTime;
             // console.log(currentTime);
 
-            this.elements!.nowText.innerText = secondToTime(currentTime);
-            this.elements!.playbackProgressNow.style.width = (currentTime / this.audio!.duration * 100).toString() + "%";
+            if (!this.progressMoveLock) {
+                this.elements.nowText.innerText = secondToTime(currentTime);
+                this.elements.playbackProgressNow.style.width = (currentTime / this.audio!.duration * 100).toString() + "%";
+            }
+
             if (currentTime === this.audio!.duration) {
                 clearInterval(this.playbackTimer);
                 this.playbackTimer = undefined;
@@ -569,8 +564,10 @@ class LimPlayer {
         this.audio!.addEventListener("ended", endHnadler);
     }
 
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
     private likeChanged(value: "liked" | "unlike", audio: AudioConfig) { }
 
+    // eslint-disable-next-line no-unused-vars
     onLikeChanged(callback: (value: "liked" | "unlike", audio: AudioConfig) => void) {
         this.likeChanged = callback;
     }
