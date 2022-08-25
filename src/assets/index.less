@@ -14,41 +14,41 @@
     position: relative;
     min-width: 620px;
     height: 90px;
-}
 
-.limplayer * {
-    user-select: none;
-}
+    * {
+        user-select: none;
+    }
 
-.limplayer a {
-    outline: none;
-    text-decoration: none;
-    -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
-    user-select: none;
-    -moz-user-select: none;
-    color: black;
-}
+    a {
+        outline: none;
+        text-decoration: none;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+        user-select: none;
+        -moz-user-select: none;
+        color: black;
+    }
 
-.limplayer button {
-    outline: none;
-    border: none;
-    background-color: #fff;
-    cursor: pointer;
-    padding: 0;
-}
+    button {
+        outline: none;
+        border: none;
+        background-color: #fff;
+        cursor: pointer;
+        padding: 0;
+    }
 
-.limplayer .limplayer-info,
-.limplayer-side-controller {
-    width: 30%;
-    min-width: 180px;
-    vertical-align: baseline;
-}
+    .limplayer-info,
+    .limplayer-side-controller {
+        width: 30%;
+        min-width: 180px;
+        vertical-align: baseline;
+    }
 
-.limplayer .limplayer-info .container {
-    display: flex;
-    justify-items: flex-start;
-    position: relative;
-    align-items: center;
+    .limplayer-info .container {
+        display: flex;
+        justify-items: flex-start;
+        position: relative;
+        align-items: center;
+    }
 }
 
 /* TODO: 了解grid和mask-image, 实现过长横幅滚动效果 */
@@ -56,7 +56,7 @@
     overflow: hidden;
     display: grid;
     padding-right: 20px;
-    grid-template:"title title" "badges subtitle" /auto 1fr;
+    grid-template: "title title""badges subtitle" /auto 1fr;
     -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 12px), transparent);
     mask-image: linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 12px), transparent);
 }
