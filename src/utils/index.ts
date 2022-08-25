@@ -71,6 +71,7 @@ const initElements = (id: string) => {
     // play control button
     const playSvg = getElement(id + " .controls-playpause .play");
     const pauseSvg = getElement(id + " .controls-playpause .pause");
+    const loadingSvg = getElement(id + " .controls-playpause .player-loading");
     const playButton = getElement(id + " .controls-playpause button");
     const preButton = getElement(id + " .controls-left .pre");
     const nextButton = getElement(id + " .controls-right .next");
@@ -82,7 +83,7 @@ const initElements = (id: string) => {
         listLoopSvg, singleLoopSvg, loopButtton, loopPointer,
         muteSvg, mediumVolumeSvg, highVolumeSvg, volumeButton, volumeProgressNow, volumeProgressBar, volumePointer,
         durationText, nowText, playbackProgressBar, playbackPointer, playbackProgressNow, playbackProgressBuffered,
-        playSvg, pauseSvg, playButton,
+        playSvg, pauseSvg, playButton, loadingSvg,
         preButton, nextButton
     };
 };

@@ -37,11 +37,6 @@
     padding: 0;
 }
 
-.limplayer svg.checked path,
-.limplayer button.checked svg path {
-    fill: #8680df;
-}
-
 .limplayer .limplayer-info,
 .limplayer-side-controller {
     width: 30%;
@@ -56,6 +51,16 @@
     align-items: center;
 }
 
+/* TODO: 了解grid和mask-image, 实现过长横幅滚动效果 */
+.limplayer .limplayer-info .container .flex-helper {
+    overflow: hidden;
+    display: grid;
+    padding-right: 20px;
+    grid-template:"title title" "badges subtitle" /auto 1fr;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 12px), transparent);
+    mask-image: linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 12px), transparent);
+}
+
 .limplayer .limplayer-info .container .cover img {
     cursor: pointer;
     width: 70px;
@@ -66,7 +71,9 @@
 }
 
 .limplayer .limplayer-info .container .info a {
+    display: inline-block;
     color: #4e4e4e;
+    white-space: nowrap;
 }
 
 .limplayer .limplayer-info .container .info .name {
@@ -103,6 +110,16 @@
     width: 100%;
     vertical-align: baseline;
     gap: 18px;
+}
+
+.limplayer .container svg path {
+    fill: #707070;
+}
+
+.limplayer .container svg.checked path,
+.limplayer .container svg.liked path,
+.limplayer .container button.checked svg path {
+    fill: #8680df;
 }
 
 .limplayer .limplayer-main-controller .container .controls .shuffle,
@@ -153,12 +170,12 @@
     margin: -1px;
 }
 
-.limplayer .limplayer-main-controller .container .controls .controls-playpause .player-loaing {
+.limplayer .limplayer-main-controller .container .controls .controls-playpause .player-loading {
+    display: none;
     position: absolute;
-    top: 0;
-    left: 0;
-    z-index: -999999;
-    /* animation: loading 1s linear infinite; */
+    top: -2px;
+    left: -2px;
+    animation: loading 1s linear infinite;
 }
 
 .limplayer .limplayer-main-controller .container .controls .controls-left,
@@ -299,12 +316,34 @@
     gap: 5px;
 }
 
+.animate_small_beat {
+    animation: small-beat 0.3s linear forwards;
+}
+
 .animate_beat {
     animation: beat 0.3s linear forwards;
 }
 
 .animate_shake {
     animation: shake 0.3s linear forwards;
+}
+
+@keyframes small-beat {
+    0% {
+        transform: scale(1);
+    }
+
+    25% {
+        transform: scale(1.03);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 @keyframes beat {

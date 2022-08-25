@@ -79,8 +79,10 @@ class LimPlayer {
             }
             if (this.audio!.networkState === 2 && !this.isLoaing) {
                 console.log("start loading");
+                this.elements.loadingSvg.style.display = "inline-block";
                 this.isLoaing = true;
             } else if (this.audio!.networkState !== 2 && this.isLoaing) {
+                this.elements.loadingSvg.style.display = "none";
                 this.isLoaing = false;
                 console.log("stop loading");
             }
@@ -424,11 +426,10 @@ class LimPlayer {
         }
     }
 
-    // TODO: 下一曲或上一曲是什么要根据列表长和loop来先判断
     private preAndNextHandler(nextFlag = false) {
         if (!this.playing) return;
         this.pause();
-        if (this.playList.length > 1) {
+        if (!this.audio!.loop && this.playList.length > 1) {
             const index = this.playing.index as number;
             const length = this.playList.length;
             if (this.options.shuffle) {
@@ -464,6 +465,7 @@ class LimPlayer {
 
         this.elements.nowText.innerText = "0:00";
         this.elements.playbackProgressNow.style.width = "0";
+        // 没有循环，所以到了最后一首，停止播放
         if (index === length - 1 || length === 1) {
             return;
         } else {
@@ -480,6 +482,7 @@ class LimPlayer {
         this.initAudio();
     }
 
+    // TODO: 连续暂停/播放，时间精度问题
     private playOrPause() {
         if (!this.audio) return;
         // TODO: 使用worker
@@ -492,7 +495,7 @@ class LimPlayer {
 
     play() {
         if (!this.audio) return;
-        addClass(this.elements.pauseSvg, "animate_beat");
+        addClass(this.elements.pauseSvg, "animate_small_beat");
         this.audio.play().then(() => {
             if (this.audio!.autoplay) return;
             this.playHandler();
@@ -503,7 +506,7 @@ class LimPlayer {
 
     pause() {
         if (!this.audio) return;
-        addClass(this.elements.playSvg, "animate_beat");
+        addClass(this.elements.playSvg, "animate_small_beat");
         this.audio.pause();
         hide(this.elements.pauseSvg);
         show(this.elements.playSvg);
@@ -526,15 +529,14 @@ class LimPlayer {
                 this.elements.playbackProgressNow.style.width = "100%";
             }
 
-            // 有下一曲? TODO: 按照循环类型做判断
             switch (this.options.loopType) {
                 case "list":
+                case "single":
                     this.preAndNextHandler(true);
                     break;
                 case "none":
                     this.nextHandlerWithoutLoop();
-                    break;
-                case "single":
+                    break;                    
                 default:
                     break;
             }
