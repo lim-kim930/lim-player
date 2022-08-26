@@ -1,4 +1,4 @@
 public/index.html
 public/redirect.html
 .eslintrc.js
-webpack.config.js
+rollup.config.js
