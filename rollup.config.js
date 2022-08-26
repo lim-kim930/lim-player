@@ -38,7 +38,7 @@ switch (process.env.BUILD_TYPE) {
         };
         plugins = [
             less({
-                output: "lib/assets/css/index.css"
+                output: "lib/css/index.css"
             }),
             typescript({
                 outDir: "lib",
