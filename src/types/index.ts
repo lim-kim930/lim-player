@@ -42,3 +42,5 @@ export interface PlayerOptions {
     // Local configuration takes precedence
     lotp?: boolean;
 }
+
+export type PlayerEvents = "liked" | "unliked" | "ended"

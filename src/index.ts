@@ -6,7 +6,7 @@
 import "./assets/index.less";
 import PlayerTemplete from "./playerTemplate";
 import { hide, show, addClass, removeClass, secondToTime, percentToSecond, initElements } from "./utils";
-import { PlayerOptions, AudioConfig } from "./types";
+import { PlayerOptions, AudioConfig, PlayerEvents } from "./types";
 import PlayerStorage from "./storage";
 import { defaultOptions, defaultSongConfig } from "./config";
 
@@ -576,13 +576,25 @@ class LimPlayer {
     private ended() { }
 
     // eslint-disable-next-line no-unused-vars
-    onLikeChanged(callback: (value: "liked" | "unlike", audio: AudioConfig) => void) {
-        this.likeChanged = callback;
+    // onLikeChanged(callback: (value: "liked" | "unlike", audio: AudioConfig) => void) {
+    //     this.likeChanged = callback;
+    // }
+    on(event: PlayerEvents, callback: (value: "liked" | "unlike", audio: AudioConfig) => void) {
+        switch (event) {
+            case "liked":
+                this.likeChanged = callback;
+                break;
+            case "ended":
+                this.ended = callback;
+                break;
+            default:
+                break;
+        }
     }
 
-    onEnded(callback: () => void) {
-        this.ended = callback;
-    }
+    // onEnded(callback: () => void) {
+    //     this.ended = callback;
+    // }
 
     // onDownload(callback: (audio: AudioConfig) => void) {
     //     this.likeChanged = callback;
