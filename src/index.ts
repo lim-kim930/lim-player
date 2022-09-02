@@ -60,6 +60,7 @@ class LimPlayer {
         this.audio.loop = this.options.loopType === "single";
         this.audio.volume = this.options.volume!;
         this.audio.src = this.playing!.src;
+        // TODO: 加载动画应该出现在播放被影响的时候，而不是正常缓冲的时候
         this.loadingCheckTimer = window.setInterval(() => {
             // console.log(this.audio!.networkState);
             const len = this.audio!.buffered.length;
