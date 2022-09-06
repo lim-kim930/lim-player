@@ -358,7 +358,7 @@ class LimPlayer {
         this.elements.playButton.addEventListener("click", () => {
             this.playOrPause();
         });
-        // TODO: 方向键快进和后退
+        // TODO: 方向键快进和后退,音量增减
         // 空格播放和暂停
         document.addEventListener("keypress", (e) => {
             const element = e.target! as HTMLElement;
