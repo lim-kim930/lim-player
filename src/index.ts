@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-//TODO: use less
 import "./assets/index.less";
 import PlayerTemplete from "./playerTemplate";
 import { hide, show, addClass, removeClass, secondToTime, percentToSecond, initElements } from "./utils";
@@ -24,6 +23,10 @@ class LimPlayer {
     private loadingCheckTimer: number | undefined;
     private progressMoveLock: boolean | undefined;
     private elements: { [key: string]: HTMLElement };
+
+    private liked: ((audio: AudioConfig) => void) | undefined;
+    private unliked: ((audio: AudioConfig) => void) | undefined;
+    private ended: (() => void) | undefined;
     audio: HTMLAudioElement | undefined;
     constructor(el: string, options?: PlayerOptions, lists?: AudioConfig[]) {
         // 播放器数量
@@ -216,12 +219,16 @@ class LimPlayer {
                 oldSvg = likedSvg;
                 newSvg = unlikeSvg;
                 className = ["animate_beat", "animate_shake"];
-                this.likeChanged("unlike", this.playing);
+                if(this.unliked) {
+                    this.unliked(this.playing);
+                }
             } else {
                 oldSvg = unlikeSvg;
                 newSvg = likedSvg;
                 className = ["animate_shake", "animate_beat"];
-                this.likeChanged("liked", this.playing);
+                if(this.liked) {
+                    this.liked(this.playing);
+                }
             }
             this.playing.liked = !this.playing.liked;
             // TODO: 需要在回调里更改总数据的like
@@ -526,7 +533,9 @@ class LimPlayer {
         if (this.playbackTimer) return;
 
         const endHnadler = () => {
-            this.ended();
+            if(this.ended) {
+                this.ended();
+            }
             hide(this.elements.pauseSvg);
             show(this.elements.playSvg);
             if (this.playbackTimer) {
@@ -572,20 +581,23 @@ class LimPlayer {
         this.audio!.addEventListener("ended", endHnadler);
     }
 
-    private likeChanged(value: "liked" | "unlike", audio: AudioConfig) { }
-    private ended() { }
-
     // eslint-disable-next-line no-unused-vars
     // onLikeChanged(callback: (value: "liked" | "unlike", audio: AudioConfig) => void) {
     //     this.likeChanged = callback;
     // }
-    on(event: PlayerEvents, callback: (value: "liked" | "unlike", audio: AudioConfig) => void) {
+    on(event: 'liked', handler: (audio: AudioConfig) => void): void
+    on(event: 'unliked', handler: (audio: AudioConfig) => void): void
+    on(event: 'ended', handler: () => void): void
+    on(event: PlayerEvents, handler: (...args: AudioConfig[]) => void) {
         switch (event) {
             case "liked":
-                this.likeChanged = callback;
+                this.liked = handler;
+                break;
+            case "unliked":
+                this.unliked = handler;
                 break;
             case "ended":
-                this.ended = callback;
+                this.ended = handler;
                 break;
             default:
                 break;
