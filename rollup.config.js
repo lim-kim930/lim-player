@@ -3,7 +3,6 @@ import less from 'rollup-plugin-less';
 import { terser } from "rollup-plugin-terser";
 import dts from "rollup-plugin-dts";
 
-console.log(process.env.BUILD_TYPE);
 let input = 'src/index.ts';
 let output = {};
 let plugins = [];
@@ -24,6 +23,7 @@ switch (process.env.BUILD_TYPE) {
             }),
             typescript({
                 outDir: "dist",
+                module: 'esnext',
                 compilerOptions: {
                     declaration: false,
                     removeComments: true

@@ -7,7 +7,7 @@ import PlayerTemplete from "./playerTemplate";
 import { hide, show, addClass, removeClass, secondToTime, percentToSecond, initElements } from "./utils";
 import { PlayerOptions, AudioConfig, PlayerEvents } from "./types";
 import PlayerStorage from "./storage";
-import { defaultOptions, defaultSongConfig } from "./config";
+import { defaultOptions } from "./config";
 
 class LimPlayer {
     private static playerCount = 0;
@@ -62,7 +62,9 @@ class LimPlayer {
         this.audio.autoplay = this.options.autoplay!;
         this.audio.loop = this.options.loopType === "single";
         this.audio.volume = this.options.volume!;
-        this.audio.src = this.playing!.src;
+        if (this.playing) {
+            this.audio.src = this.playing.src;
+        }
         // TODO: 加载动画应该出现在播放被影响的时候，而不是正常缓冲的时候
         this.loadingCheckTimer = window.setInterval(() => {
             // console.log(this.audio!.networkState);
@@ -170,7 +172,7 @@ class LimPlayer {
                 audio.index = index;
             });
         } else {
-            list = [defaultSongConfig];
+            list = [];
         }
         return list;
     }
@@ -219,14 +221,14 @@ class LimPlayer {
                 oldSvg = likedSvg;
                 newSvg = unlikeSvg;
                 className = ["animate_beat", "animate_shake"];
-                if(this.unliked) {
+                if (this.unliked) {
                     this.unliked(this.playing);
                 }
             } else {
                 oldSvg = unlikeSvg;
                 newSvg = likedSvg;
                 className = ["animate_shake", "animate_beat"];
-                if(this.liked) {
+                if (this.liked) {
                     this.liked(this.playing);
                 }
             }
@@ -487,7 +489,7 @@ class LimPlayer {
 
     // TODO: 连续暂停/播放，时间精度问题
     private playOrPause() {
-        if (!this.audio) return;
+        if (!this.audio || !this.playing) return;
         // TODO: 使用worker
         if (this.audio.paused) {
             addClass(this.elements.pauseSvg, "animate_small_beat");
@@ -533,7 +535,7 @@ class LimPlayer {
         if (this.playbackTimer) return;
 
         const endHnadler = () => {
-            if(this.ended) {
+            if (this.ended) {
                 this.ended();
             }
             hide(this.elements.pauseSvg);

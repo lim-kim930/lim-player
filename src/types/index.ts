@@ -9,7 +9,7 @@ export interface AudioConfig {
     theme?: "auto" | string;
     id?: string;
     index?: number;
-    liked?: boolean
+    liked?: boolean;
 }
 
 export interface PlayerOptions {

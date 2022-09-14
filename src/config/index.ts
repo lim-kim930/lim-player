@@ -1,4 +1,4 @@
-import { AudioConfig, PlayerOptions } from "../types";
+import { PlayerOptions } from "../types";
 
 const defaultOptions: PlayerOptions = {
     autoplay: true,
@@ -13,12 +13,12 @@ const defaultOptions: PlayerOptions = {
     lotp: true
 };
 
-const defaultSongConfig: AudioConfig = {
-    name: "ALIEN",
-    artist: "LEE SUHYUN",
-    src: "https://limkim.cn/limiii/singer/music/LEE%20SUHYUN%20-%20ALIEN.mp3",
-    cover: "https://limkim.cn/limiii/singer/assets/albumimage/ALIEN.jpg",
-    liked: true
-};
+// const defaultSongConfig: AudioConfig = {
+//     name: "ALIEN",
+//     artist: "LEE SUHYUN",
+//     src: "https://limkim.cn/limiii/singer/music/LEE%20SUHYUN%20-%20ALIEN.mp3",
+//     cover: "https://limkim.cn/limiii/singer/assets/albumimage/ALIEN.jpg",
+//     liked: true
+// };
 
-export { defaultOptions, defaultSongConfig };
+export { defaultOptions };
