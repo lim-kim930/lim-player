@@ -42,7 +42,7 @@ class LimPlayer {
         // 使用initialTime配合storage可以从上次播放位置继续播放
         PlayerStorage.setOptions(this.options);
         // localStorage.setItem("lim_player_volume", this.options.volume!.toString());
-        // TODO: 检查用户输入的播放列表
+        // TODO: 检查用户输入的播放列表; 解析音乐文件，提取出相关信息
         this.playList = this.initPlayList(lists);
         this.playing = this.playList[0] || null;
         // TODO: 根据专辑颜色或options里的主题，更改.playback .progressbar .now的背景色
