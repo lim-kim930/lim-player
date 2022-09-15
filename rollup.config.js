@@ -16,17 +16,17 @@ switch (process.env.BUILD_TYPE) {
         plugins = [
             terser(),
             less({
-                output: "dist/css/limplayer.min.css",
+                output: "dist/assets/css/limplayer.min.css",
                 option: {
                     compress: true
                 }
             }),
             typescript({
                 outDir: "dist",
-                module: 'esnext',
                 compilerOptions: {
                     declaration: false,
-                    removeComments: true
+                    removeComments: true,
+                    module: 'es6'
                 }
             })
         ];
@@ -38,7 +38,7 @@ switch (process.env.BUILD_TYPE) {
         };
         plugins = [
             less({
-                output: "lib/css/index.css"
+                output: "lib/assets/css/index.css"
             }),
             typescript({
                 outDir: "lib",
@@ -58,7 +58,7 @@ switch (process.env.BUILD_TYPE) {
         };
         plugins = [
             less({
-                output: "lib/css/index.css",
+                output: "lib/assets/css/index.css",
                 option: {
                     compress: true
                 }

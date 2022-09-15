@@ -41,7 +41,7 @@ class LimPlayer {
         this.options = this.initOptions(options);
         // 使用initialTime配合storage可以从上次播放位置继续播放
         PlayerStorage.setOptions(this.options);
-        localStorage.setItem("lim_player_volume", this.options.volume!.toString());
+        // localStorage.setItem("lim_player_volume", this.options.volume!.toString());
         // TODO: 检查用户输入的播放列表
         this.playList = this.initPlayList(lists);
         this.playing = this.playList[0] || null;
@@ -159,6 +159,8 @@ class LimPlayer {
             }
             _options = storageOptions;
         }
+        console.log(_options);
+        
         this.checkOptionsValid(_options);
         return _options;
     }
@@ -329,16 +331,19 @@ class LimPlayer {
                 const width = e.clientX - volumeProgressBar.offsetLeft - 15;
                 if (width > 50) {
                     this.options.volume = width > 100 ? 1 : width / 100;
+                    this.options.mute = false;
                     hide(mediumVolumeSvg);
                     hide(muteSvg);
                     show(highVolumeSvg);
                 } else if (width <= 0) {
                     this.options.volume = 0;
+                    this.options.mute = true;
                     hide(highVolumeSvg);
                     hide(mediumVolumeSvg);
                     show(muteSvg);
                 } else {
                     this.options.volume = width / 100;
+                    this.options.mute = false;
                     hide(muteSvg);
                     hide(highVolumeSvg);
                     show(mediumVolumeSvg);
@@ -350,7 +355,7 @@ class LimPlayer {
                 }
             };
             const upHandler = () => {
-                localStorage.setItem("lim_player_volume", String(this.options.volume!));
+                // localStorage.setItem("lim_player_volume", String(this.options.volume!));
                 document.removeEventListener("mousemove", moveHandler);
                 document.removeEventListener("mouseup", upHandler);
                 removeClass(volumePointer, "pointer-active");
