@@ -159,8 +159,6 @@ class LimPlayer {
             }
             _options = storageOptions;
         }
-        console.log(_options);
-        
         this.checkOptionsValid(_options);
         return _options;
     }
@@ -494,7 +492,7 @@ class LimPlayer {
 
     // TODO: 连续暂停/播放，时间精度问题
     private playOrPause() {
-        if (!this.audio || !this.playing) return;
+        if (!this.audio || !this.playing || isNaN(this.audio.duration)) return;
         // TODO: 使用worker
         if (this.audio.paused) {
             addClass(this.elements.pauseSvg, "animate_small_beat");
