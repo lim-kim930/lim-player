@@ -374,6 +374,7 @@ class LimPlayer {
         // 空格播放和暂停
         document.addEventListener("keypress", (e) => {
             const element = e.target! as HTMLElement;
+            if (e.key !== ' ') { return; }
             if (element.nodeName == 'TEXTAREA' || element.nodeName == 'INPUT' || element.nodeName == 'BUTTON') {
                 return;
             } else {
