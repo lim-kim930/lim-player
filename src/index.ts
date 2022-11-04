@@ -2,7 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import "./assets/index.less";
+// TODO: 拆分模块
+// TODO: 检测是否为移动端, 增加移动端模式
+import "./assets/css/index.less";
 import PlayerTemplete from "./playerTemplate";
 import { hide, show, addClass, removeClass, secondToTime, percentToSecond, initElements } from "./utils";
 import { PlayerOptions, AudioConfig, PlayerEvents } from "./types";
@@ -39,7 +41,7 @@ class LimPlayer {
         if (!element) throw new Error("No element found with id: " + el);
         this.container = element;
         this.options = this.initOptions(options);
-        // 使用initialTime配合storage可以从上次播放位置继续播放
+        // TODO: 使用initialTime配合storage可以从上次播放位置继续播放
         PlayerStorage.setOptions(this.options);
         // localStorage.setItem("lim_player_volume", this.options.volume!.toString());
         // TODO: 检查用户输入的播放列表; 解析音乐文件，提取出相关信息

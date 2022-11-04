@@ -1,3 +1,4 @@
+// TODO: 改写成类的形式
 const hide = (element: HTMLElement) => {
     element.style.display = "none";
 };

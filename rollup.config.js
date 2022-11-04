@@ -16,7 +16,7 @@ switch (process.env.BUILD_TYPE) {
         plugins = [
             terser(),
             less({
-                output: "dist/assets/css/limplayer.min.css",
+                output: "dist/css/limplayer.css",
                 option: {
                     compress: true
                 }
