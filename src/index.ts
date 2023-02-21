@@ -11,6 +11,7 @@ import { hide, show, addClass, removeClass, secondToTime, percentToSecond, initE
 import { PlayerOptions, AudioConfig, PlayerEvents } from "./types";
 import PlayerStorage from "./storage";
 import { defaultOptions } from "./config";
+// 代理，可否应用到状态更新
 
 class LimPlayer {
     private static playerCount = 0;
@@ -374,6 +375,7 @@ class LimPlayer {
             this.playOrPause();
         });
         // TODO: 方向键快进和后退,音量增减
+        // 空格会选中上次点击的内容
         // 空格播放和暂停
         document.addEventListener("keypress", (e) => {
             const element = e.target! as HTMLElement;
