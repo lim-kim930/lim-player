@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 // TODO: 拆分模块
 // TODO: 检测是否为移动端, 增加移动端模式
+// TODO: 自定义是否使用source标签，并设置其属性
 import "./assets/css/index.less";
 import PlayerTemplete from "./playerTemplate";
 import { hide, show, addClass, removeClass, secondToTime, percentToSecond, initElements } from "./utils";
