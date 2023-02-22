@@ -3,20 +3,19 @@ import less from 'rollup-plugin-less';
 import { terser } from "rollup-plugin-terser";
 import dts from "rollup-plugin-dts";
 
-let input = 'src/index.ts';
-let output = {};
-let plugins = [];
-switch (process.env.BUILD_TYPE) {
-    case "UMD":
-        output = {
+const input = 'src/index.ts';
+export default [
+    {
+        input,
+        output: {
             format: "umd",
             name: "LimPlayer",
             file: "dist/limplayer.min.js"
-        };
-        plugins = [
+        },
+        plugins: [
             terser(),
             less({
-                output: "dist/css/limplayer.css",
+                output: "dist/assets/limplayer.css",
                 option: {
                     compress: true
                 }
@@ -29,16 +28,18 @@ switch (process.env.BUILD_TYPE) {
                     module: 'es6'
                 }
             })
-        ];
-        break;
-    case "ESM":
-        output = {
+        ]
+    },
+    {
+        input,
+        output: {
             format: "esm",
             dir: "lib"
-        };
-        plugins = [
+        },
+        plugins: [
             less({
-                output: "lib/assets/css/index.css"
+                insert: true,
+                output: "lib/assets/index.css"
             }),
             typescript({
                 outDir: "lib",
@@ -48,24 +49,22 @@ switch (process.env.BUILD_TYPE) {
                     module: "es6"
                 }
             })
-        ];
-        break;
-    case "TYPE":
-        input = 'src/index.ts';
-        output = {
+        ]
+    },
+    {
+        input,
+        output: {
             file: "lib/index.d.ts",
             format: "es6"
-        };
-        plugins = [
+        },
+        plugins: [
             less({
-                output: "lib/assets/css/index.css",
+                output: "lib/assets/index.css",
                 option: {
                     compress: true
                 }
             }),
             dts()
-        ];
-        break;
-}
-
-export default { input, output, plugins };
+        ]
+    }
+];

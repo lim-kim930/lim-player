@@ -4,9 +4,7 @@
   "description": "A web music player",
   "main": "lib/index.js",
   "scripts": {
-    "build-esm": "set BUILD_TYPE=ESM&&rollup -c rollup.config.js && npm run build-type",
-    "build-umd": "set BUILD_TYPE=UMD&&rollup -c rollup.config.js",
-    "build-type": "set BUILD_TYPE=TYPE&&rollup -c rollup.config.js"
+    "build": "rollup -c rollup.config.js"
   },
   "keywords": [
     "player",
