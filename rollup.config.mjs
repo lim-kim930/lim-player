@@ -1,27 +1,27 @@
 import typescript from '@rollup/plugin-typescript';
 import less from 'rollup-plugin-less';
-import { terser } from "rollup-plugin-terser";
-import dts from "rollup-plugin-dts";
+import terser from '@rollup/plugin-terser';
+import dts from 'rollup-plugin-dts';
 
 const input = 'src/index.ts';
 export default [
     {
         input,
         output: {
-            format: "umd",
-            name: "LimPlayer",
-            file: "dist/limplayer.min.js"
+            format: 'umd',
+            name: 'LimPlayer',
+            file: 'dist/limplayer.min.js'
         },
         plugins: [
             terser(),
             less({
-                output: "dist/assets/limplayer.css",
+                output: 'dist/assets/limplayer.css',
                 option: {
                     compress: true
                 }
             }),
             typescript({
-                outDir: "dist",
+                outDir: 'dist',
                 compilerOptions: {
                     declaration: false,
                     removeComments: true,
@@ -33,20 +33,20 @@ export default [
     {
         input,
         output: {
-            format: "esm",
-            dir: "lib"
+            format: 'esm',
+            dir: 'lib'
         },
         plugins: [
             less({
                 insert: true,
-                output: "lib/assets/index.css"
+                output: 'lib/assets/index.css'
             }),
             typescript({
-                outDir: "lib",
+                outDir: 'lib',
                 compilerOptions: {
                     declaration: false,
                     removeComments: true,
-                    module: "es6"
+                    module: 'es6'
                 }
             })
         ]
@@ -54,12 +54,12 @@ export default [
     {
         input,
         output: {
-            file: "lib/index.d.ts",
-            format: "es6"
+            file: 'lib/index.d.ts',
+            format: 'es6'
         },
         plugins: [
             less({
-                output: "lib/assets/index.css",
+                output: 'lib/assets/index.css',
                 option: {
                     compress: true
                 }

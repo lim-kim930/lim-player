@@ -2,4 +2,4 @@ lib
 dist
 public
 .eslintrc.js
-rollup.config.js
+rollup.config.mjs
