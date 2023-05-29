@@ -1,4 +1,5 @@
 // TODO: 使用less语法
+@import "root";
 .limplayer {
     display: flex;
     align-items: center;
@@ -15,17 +16,12 @@
     position: relative;
     min-width: 620px;
     height: 90px;
-
-    * {
-        user-select: none;
-    }
+    user-select: none;
 
     a {
         outline: none;
         text-decoration: none;
         -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
-        user-select: none;
-        -moz-user-select: none;
         color: black;
     }
 
@@ -37,6 +33,17 @@
         padding: 0;
     }
 
+    .container {
+        svg path {
+            fill: #707070;
+        }
+        svg.checked path,
+        svg.liked path,
+        button.checked svg path {
+            fill: var(--theme-color);
+        }   
+    } 
+    
     .limplayer-info,
     .limplayer-side-controller {
         width: 30%;
@@ -44,105 +51,101 @@
         vertical-align: baseline;
     }
 
-    .limplayer-info .container {
-        display: flex;
-        justify-items: flex-start;
-        position: relative;
-        align-items: center;
+    .limplayer-info {
+        .container {
+            display: flex;
+            justify-items: flex-start;
+            position: relative;
+            align-items: center;
+
+            .flex-helper {
+                overflow: hidden;
+                display: grid;
+                padding-right: 20px;
+                grid-template: "title title" "badges subtitle" /auto 1fr;
+                /* TODO: 了解grid和mask-image, 实现过长横幅滚动效果 */
+                mask-image: linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 12px), transparent);
+                -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 12px), transparent);
+            }
+
+            .cover img {
+                cursor: pointer;
+                width: 70px;
+            }
+
+            .info {
+                margin: 0 15px 0 10px;
+
+                a {
+                    display: inline-block;
+                    color: #4e4e4e;
+                    white-space: nowrap;
+                }
+
+                .name {
+                    font-weight: 600;
+                    font-size: 14px;
+                }
+
+                .artist {
+                    margin-top: 5px;
+                    font-size: 12px;
+                }
+            }
+        }
     }
-}
 
-/* TODO: 了解grid和mask-image, 实现过长横幅滚动效果 */
-.limplayer .limplayer-info .container .flex-helper {
-    overflow: hidden;
-    display: grid;
-    padding-right: 20px;
-    grid-template: "title title""badges subtitle" /auto 1fr;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 12px), transparent);
-    mask-image: linear-gradient(90deg, transparent 0, #000 6px, #000 calc(100% - 12px), transparent);
-}
+    .limplayer-main-controller {
+        max-width: 722px;
+        width: 40%;
+    
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+    
+            .controls,
+            .controls-left,
+            .controls-right {
+                display: flex;
+                align-items: center;
+            }
+    
+            .controls {
+                width: 100%;
+                vertical-align: baseline;
+                gap: 18px;
+            }
 
-.limplayer .limplayer-info .container .cover img {
-    cursor: pointer;
-    width: 70px;
-}
+            .controls .shuffle,
+            .controls-right .loop {
+                position: relative;
+            }
 
-.limplayer .limplayer-info .container .info {
-    margin: 0 15px 0 10px;
-}
+            .controls .shuffle .pointer,
+            .controls-right .loop .pointer {
+                position: absolute;
+                bottom: -1px;
+                left: 10px;
+                display: inline-block;
+                width: 4px;
+                height: 4px;
+                border-radius: 2px;
+                background-color: #8680df;
+                display: none;
+            }
 
-.limplayer .limplayer-info .container .info a {
-    display: inline-block;
-    color: #4e4e4e;
-    white-space: nowrap;
-}
-
-.limplayer .limplayer-info .container .info .name {
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.limplayer .limplayer-info .container .info .artist {
-    margin-top: 5px;
-    font-size: 12px;
-}
-
-.limplayer-main-controller {
-    max-width: 722px;
-    width: 40%;
-}
-
-.limplayer .limplayer-main-controller .container {
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
-}
-
-.limplayer .limplayer-main-controller .container .controls,
-.limplayer .limplayer-main-controller .container .controls .controls-left,
-.limplayer .limplayer-main-controller .container .controls .controls-right,
-.limplayer .limplayer-main-controller .container .playback {
-    display: flex;
-    align-items: center;
-}
-
-.limplayer .limplayer-main-controller .container .controls {
-    width: 100%;
-    vertical-align: baseline;
-    gap: 18px;
-}
-
-.limplayer .container svg path {
-    fill: #707070;
-}
-
-.limplayer .container svg.checked path,
-.limplayer .container svg.liked path,
-.limplayer .container button.checked svg path {
-    fill: #8680df;
-}
-
-.limplayer .limplayer-main-controller .container .controls .shuffle,
-.limplayer .limplayer-main-controller .container .controls-right .loop {
-    position: relative;
-}
-
-.limplayer .limplayer-main-controller .container .controls .shuffle .pointer,
-.limplayer .limplayer-main-controller .container .controls-right .loop .pointer {
-    position: absolute;
-    bottom: -1px;
-    left: 10px;
-    display: inline-block;
-    width: 4px;
-    height: 4px;
-    border-radius: 2px;
-    background-color: #8680df;
-    display: none;
-}
-
-.limplayer .limplayer-main-controller .container .controls-right .loop .pointer {
-    bottom: -2px;
+            .controls-right .loop .pointer {
+                bottom: -2px;
+            }
+    
+            .playback {
+                display: flex;
+                align-items: center;
+            }
+        }
+    }
 }
 
 .limplayer .limplayer-info .container .like button path,

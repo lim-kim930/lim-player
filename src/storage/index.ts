@@ -1,4 +1,4 @@
-import { PlayerOptions } from "../types";
+import { PlayerOptions } from "../typings/index.js";
 
 export default class PlayerStorage {
 

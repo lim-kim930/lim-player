@@ -1,28 +1,27 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 // TODO: 优化模板,缩小打包体积
-import { PlayerOptions, AudioConfig } from "../types";
-import { defaultCoverSvg, downloadSvg, likeAndUnlikeSvg, listSvg, loadingSvg, loopSvg, nextSvg, playAndPauseSvg, preSvg, shuffleSvg, volumeSvg } from "./svgs";
+// TODO: title在切换歌曲时需要更改
+import { defaultAudioConfig } from "../config";
+import { PlayerOptions, AudioConfig } from "../typings/index.js";
+import { downloadSvg, likeAndUnlikeSvg, listSvg, loadingSvg, loopSvg, nextSvg, playAndPauseSvg, preSvg, shuffleSvg, volumeSvg } from "./svgs";
 
 export default class PlayerTemplete {
     id: string;
     content: string;
     constructor(options: PlayerOptions, audio: AudioConfig | null) {
+        // if (options.device === "auto") {
+
+        // }
         // 每个player有一个以时间戳为区分的id
         const date = new Date().getTime();
         this.id = "player-" + date.toString();
 
         // 通过options初始渲染的按钮
         if (audio === null) {
-            audio = {
-                name: "unknown",
-                artist: "unknown",
-                src: "",
-                cover: "",
-                liked: false
-            };
+            audio = defaultAudioConfig;
         }
-        // TODO: title在切换歌曲时需要更改
-        this.content = `<div class="limplayer-info"><div class="container"><div class="cover">${audio.cover ? '<img src="' + audio.cover + '">' : defaultCoverSvg}</div><div class="flex-helper"><div class="info"><div class="name"><a href="" title="${audio.name}">${audio.name}</a></div><div class="artist"><a href="" title="${audio.artist}">${audio.artist}</a></div></div></div><div class="like"><button>${likeAndUnlikeSvg(audio.liked)}</button></div></div></div><div class="limplayer-main-controller"><div class="container"><div class="controls"><div class="controls-left"><button class="shuffle">${shuffleSvg(options.shuffle)}<span class="pointer" style="display: ${options.shuffle ? 'block' : 'none'};"></span></button><button class="pre">${preSvg}</button></div><div class="controls-playpause"><button>${playAndPauseSvg}${loadingSvg}</button></div><div class="controls-right"><button class="next">${nextSvg}</button><button class="loop">${loopSvg(options.loopType)}<span class="pointer" style="display: ${options.loopType === 'none' ? 'none' : 'block'};"></span></button></div></div><div class="playback"><div class="now-position"><span>0:00</span></div><div class="progressbar"><span class="total"><span class="now"><span class="pointer"></span></span><span class="buffered"></span></span></div><div class="duration"><span>0:00</span></div></div></div></div><div class="limplayer-side-controller"><div class="container"><div class="other"><button>${listSvg}</button><button>${downloadSvg}</button></div><div class="volume"><button>${volumeSvg(options.volume!, options.mute)}</button><div class="progressbar"><span class="total"><span class="now" style="width: ${options.mute ? 0 : options.volume! * 100}%;"><span class="pointer"></span></span></span></div></div></div></div>`;
+        this.content = `<div class="limplayer-info"><div class="container"><div class="cover"><img src="${audio.cover ? audio.cover : 'https://limkim.cn/pic/unknown.svg'}"></div><div class="flex-helper"><div class="info"><div class="name"><a href="" title="${audio.name}">${audio.name}</a></div><div class="artist"><a href="" title="${audio.artist}">${audio.artist}</a></div></div></div><div class="like"><button>${likeAndUnlikeSvg(audio.liked)}</button></div></div></div><div class="limplayer-main-controller"><div class="container"><div class="controls"><div class="controls-left"><button class="shuffle">${shuffleSvg(options.shuffle)}<span class="pointer" style="display: ${options.shuffle ? 'block' : 'none'};"></span></button><button class="pre">${preSvg}</button></div><div class="controls-playpause"><button>${playAndPauseSvg}${loadingSvg}</button></div><div class="controls-right"><button class="next">${nextSvg}</button><button class="loop">${loopSvg(options.loopType)}<span class="pointer" style="display: ${options.loopType === 'none' ? 'none' : 'block'};"></span></button></div></div><div class="playback"><div class="now-position"><span>0:00</span></div><div class="progressbar"><span class="total"><span class="now"><span class="pointer"></span></span><span class="buffered"></span></span></div><div class="duration"><span>0:00</span></div></div></div></div><div class="limplayer-side-controller"><div class="container"><div class="other"><button>${listSvg}</button><button>${downloadSvg}</button></div><div class="volume"><button>${volumeSvg(options.volume, options.mute)}</button><div class="progressbar"><span class="total"><span class="now" style="width: ${options.mute ? 0 : options.volume * 100}%;"><span class="pointer"></span></span></span></div></div></div></div>`;
+
     }
 }
 // <button>

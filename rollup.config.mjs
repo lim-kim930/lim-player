@@ -2,6 +2,7 @@ import typescript from '@rollup/plugin-typescript';
 import less from 'rollup-plugin-less';
 import terser from '@rollup/plugin-terser';
 import dts from 'rollup-plugin-dts';
+import nodePolyfills from 'rollup-plugin-polyfill-node';
 
 const input = 'src/index.ts';
 export default [
@@ -27,6 +28,9 @@ export default [
                     removeComments: true,
                     module: 'es6'
                 }
+            }),
+            nodePolyfills({
+                include: ['crypto']
             })
         ]
     },
@@ -38,7 +42,7 @@ export default [
         },
         plugins: [
             less({
-                insert: true,
+                // insert: true,
                 output: 'lib/assets/index.css'
             }),
             typescript({
@@ -54,16 +58,10 @@ export default [
     {
         input,
         output: {
-            file: 'lib/index.d.ts',
-            format: 'es6'
+            file: 'lib/index.d.ts'
         },
+        external: id => /less/.test(id),
         plugins: [
-            less({
-                output: 'lib/assets/index.css',
-                option: {
-                    compress: true
-                }
-            }),
             dts()
         ]
     }
