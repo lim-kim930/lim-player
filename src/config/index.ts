@@ -1,6 +1,6 @@
-import { PlayerOptions } from "../types";
+import { AudioConfig, PlayerOptions } from "../typings/index.js";
 
-const defaultOptions: PlayerOptions = {
+const defaultPlayerOptions: PlayerOptions = {
     autoplay: true,
     preload: "metadata",
     mutex: false,
@@ -10,7 +10,21 @@ const defaultOptions: PlayerOptions = {
     theme: "default",
     volume: 0.3,
     mute: false,
-    lotp: true
+    lotp: true,
+    device: "auto"
+};
+const defaultAudioConfig: Required<AudioConfig> = {
+    // TODO: 考虑是否可以不传name,artist字段
+    id: '',
+    name: 'unknown',
+    artist: 'unknown',
+    src: '',
+    lrc: '',
+    lrcType: "lrc",
+    cover: '',
+    theme: "auto",
+    index: 0,
+    liked: false
 };
 
 // const defaultSongConfig: AudioConfig = {
@@ -21,4 +35,4 @@ const defaultOptions: PlayerOptions = {
 //     liked: true
 // };
 
-export { defaultOptions };
+export { defaultPlayerOptions, defaultAudioConfig };
