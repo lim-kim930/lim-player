@@ -2,7 +2,6 @@ import typescript from '@rollup/plugin-typescript';
 import less from 'rollup-plugin-less';
 import terser from '@rollup/plugin-terser';
 import dts from 'rollup-plugin-dts';
-import nodePolyfills from 'rollup-plugin-polyfill-node';
 
 const input = 'src/index.ts';
 export default [
@@ -28,9 +27,6 @@ export default [
                     removeComments: true,
                     module: 'es6'
                 }
-            }),
-            nodePolyfills({
-                include: ['crypto']
             })
         ]
     },

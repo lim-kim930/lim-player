@@ -36,6 +36,9 @@ class LimPlayer {
     private likeChanged: ((audio: AudioConfig) => void) | undefined;
     private ended: (() => void) | undefined;
     private errorOccurred: ((data: ErrorData) => void) | undefined;
+    private onPlayed: ((audio: AudioConfig) => void) | undefined;
+    private onPrev: ((audio: AudioConfig) => void) | undefined;
+    private onNext: ((audio: AudioConfig) => void) | undefined;
     private hls: Hls;
     audio: HTMLAudioElement | undefined;
     constructor(el: string, options: Partial<PlayerOptions> = {}, lists: Omit<AudioConfig, "index">[] = [], auth?: { aes_key: string, encrypted: string, iv: string, token: string }) {
@@ -67,7 +70,9 @@ class LimPlayer {
                     xhr.setRequestHeader('AESKEY', auth.encrypted);
                     xhr.setRequestHeader('AESIV', auth.iv);
                 }
-                xhr.setRequestHeader('Authorization', auth?.token || "");
+                if (auth?.token) {
+                    xhr.setRequestHeader('Authorization', auth?.token);
+                }
             }
         });
         this.hls.on(Hls.Events.ERROR, (eventName, data) => {
@@ -511,16 +516,21 @@ class LimPlayer {
                     } else {
                         this.playing = this.playList[index + 1];
                     }
+                    if (this.onNext) {
+                        this.onNext(this.playing);
+                    }
                 } else {
                     if (index === 0) {
                         this.playing = this.playList[length - 1];
                     } else {
                         this.playing = this.playList[index - 1];
                     }
+                    if (this.onPrev) {
+                        this.onPrev(this.playing);
+                    }
                 }
             }
         }
-
         this.initAudio();
     }
 
@@ -565,6 +575,9 @@ class LimPlayer {
         if (!this.audio) return;
         this.audio.play().then(() => {
             if (this.audio!.autoplay) return;
+            if (this.onPlayed) {
+                this.onPlayed(this.playing!);
+            }
             this.playHandler();
         }).catch((err) => {
             throw err;
@@ -665,6 +678,9 @@ class LimPlayer {
     on(event: 'likeChanged', handler: (audio: AudioConfig) => void): void
     on(event: 'ended', handler: () => void): void
     on(event: 'error', handler: (data: ErrorData) => void): void
+    on(event: 'play', handler: (audio: AudioConfig) => void): void
+    on(event: 'prev', handler: (audio: AudioConfig) => void): void
+    on(event: 'next', handler: (audio: AudioConfig) => void): void
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     on(event: PlayerEvents, handler: (arg?: any) => void) {
         switch (event) {
@@ -676,6 +692,15 @@ class LimPlayer {
                 break;
             case "error":
                 this.errorOccurred = handler;
+                break;
+            case "play":
+                this.onPlayed = handler;
+                break;
+            case "prev":
+                this.onPrev = handler;
+                break;
+            case "next":
+                this.onNext = handler;
                 break;
             default:
                 break;
