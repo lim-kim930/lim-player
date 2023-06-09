@@ -1,3 +1,5 @@
-public/index.html
-public/redirect.html
+lib
+dist
+public
 .eslintrc.js
+rollup.config.mjs

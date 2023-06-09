@@ -1,18 +1,29 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-//TODO: use less
-import "./assets/index.css";
+// TODO: 拆分模块
+// TODO: 检测是否为移动端, 增加移动端模式
+// TODO: 自定义是否使用source标签，并设置其属性
+// TODO: 允许后续设置playlist
+// TODO: 点击按钮的动画应该是按下变小，松开在变大, 点击下一曲之后播放不要跳动
+// TODO: Proxy代理，可否应用到状态更新
+import Hls, { ErrorData, Events, HlsConfig } from 'lim-hls';
+// import "./assets/style/index.less";
 import PlayerTemplete from "./playerTemplate";
-import { hide, show, addClass, removeClass, secondToTime, percentToSecond, initElements } from "./utils";
-import { PlayerOptions, AudioConfig } from "./types";
+import { hide, show, addClass, removeClass, secondToTime, percentToSecond, initElements, isMobile, generateRandomString } from "./utils";
+import { PlayerOptions, AudioConfig, PlayerEvents } from "./typings";
 import PlayerStorage from "./storage";
-import { defaultOptions, defaultSongConfig } from "./config";
+import { defaultAudioConfig, defaultPlayerOptions } from "./config";
 
 class LimPlayer {
     private static playerCount = 0;
     container: HTMLElement;
     playerID: string;
     options: PlayerOptions;
-    playList: AudioConfig[];
+    playList: Required<AudioConfig>[];
     playing: AudioConfig | null;
     private isLoaing = false;
     private bufferd = 0;
@@ -20,9 +31,17 @@ class LimPlayer {
     private controlTimer: number | undefined;
     private loadingCheckTimer: number | undefined;
     private progressMoveLock: boolean | undefined;
-    elements: { [key: string]: HTMLElement };
-    private audio: HTMLAudioElement | undefined;
-    constructor(el: string, options?: PlayerOptions, lists?: AudioConfig[]) {
+    private elements: { [key: string]: HTMLElement };
+
+    private likeChanged: ((audio: AudioConfig) => void) | undefined;
+    private ended: (() => void) | undefined;
+    private errorOccurred: ((data: ErrorData) => void) | undefined;
+    private onPlayed: ((audio: AudioConfig) => void) | undefined;
+    private onPrev: ((audio: AudioConfig) => void) | undefined;
+    private onNext: ((audio: AudioConfig) => void) | undefined;
+    private hls: Hls;
+    audio: HTMLAudioElement | undefined;
+    constructor(el: string, options: Partial<PlayerOptions> = {}, lists: Omit<AudioConfig, "index">[] = [], auth?: { aes_key: string, encrypted: string, iv: string, token: string }) {
         // 播放器数量
         LimPlayer.playerCount++;
         // if(options?.mutex && LimPlayer.playerCount > 1) {
@@ -33,14 +52,47 @@ class LimPlayer {
         if (!element) throw new Error("No element found with id: " + el);
         this.container = element;
         this.options = this.initOptions(options);
-        // 使用initialTime配合storage可以从上次播放位置继续播放
+        // TODO: 使用initialTime配合storage可以从上次播放位置继续播放
         PlayerStorage.setOptions(this.options);
-        localStorage.setItem("lim_player_volume", this.options.volume!.toString());
-        // TODO: 检查用户输入的播放列表
+        // TODO: 检查用户输入的播放列表; 解析音乐文件，提取出相关信息
         this.playList = this.initPlayList(lists);
         this.playing = this.playList[0] || null;
         // TODO: 根据专辑颜色或options里的主题，更改.playback .progressbar .now的背景色
         const templete = new PlayerTemplete(this.options, this.playing);
+        this.hls = new Hls({
+            aes_key: auth?.aes_key,
+            aes_iv: auth?.iv,
+            debug: false,
+            enableWorker: true,
+            lowLatencyMode: true,
+            xhrSetup: (xhr, url) => {
+                if (url.includes('.key') && auth) {
+                    xhr.setRequestHeader('AESKEY', auth.encrypted);
+                    xhr.setRequestHeader('AESIV', auth.iv);
+                }
+                if (auth?.token) {
+                    xhr.setRequestHeader('Authorization', auth?.token);
+                }
+            }
+        });
+        this.hls.on(Hls.Events.ERROR, (eventName, data) => {
+            if (this.errorOccurred) {
+                this.errorOccurred(data);
+            }
+            console.log(eventName, data);
+        });
+        // this.hls.on(Hls.Events.FRAG_LOADING, () => {
+        //     if (this.bufferd < this.audio!.currentTime && !this.isLoaing) {
+        //         this.elements.loadingSvg.style.display = "inline-block";
+        //         this.isLoaing = true;
+        //     }
+        // });
+        // this.hls.on(Hls.Events.BUFFER_APPENDED, () => {
+        //     if (this.bufferd === 0 && this.audio!.currentTime ===0 && this.isLoaing) {
+        //         this.elements.loadingSvg.style.display = "none";
+        //         this.isLoaing = false;
+        //     }
+        // });
         this.playerID = templete.id;
         addClass(element, "limplayer");
         element.setAttribute("id", this.playerID);
@@ -52,12 +104,25 @@ class LimPlayer {
 
     private initAudioElement() {
         this.audio = document.createElement("audio");
-        this.audio.preload = this.options.preload!;
-        this.audio.autoplay = this.options.autoplay!;
+        this.hls.attachMedia(this.audio);
+        this.audio.preload = this.options.preload;
+        this.audio.autoplay = this.options.autoplay;
         this.audio.loop = this.options.loopType === "single";
-        this.audio.volume = this.options.volume!;
-        this.audio.src = this.playing!.src;
+        this.audio.volume = this.options.volume;
+        if (this.playing && this.playing.src) {
+            if (this.playing.src.includes(".m3u8")) {
+                this.hls.loadSource(this.playing.src);
+            } else {
+                this.audio.src = this.playing.src;
+            }
+        }
+        // TODO: 加载动画应该出现在播放被影响的时候，而不是正常缓冲的时候
         this.loadingCheckTimer = window.setInterval(() => {
+            if (!this.playing) {
+                this.elements.loadingSvg.style.display = "none";
+                this.isLoaing = false;
+                return;
+            }
             // console.log(this.audio!.networkState);
             const len = this.audio!.buffered.length;
             // TODO: 通过buffered.length展示分段加载进度
@@ -70,6 +135,7 @@ class LimPlayer {
                 // }
 
                 const bufferd = this.audio!.buffered.end(len - 1);
+
                 if (this.bufferd !== this.audio!.buffered.end(len - 1)) {
                     this.bufferd = bufferd;
                     // console.log(this.audio!.buffered.end(len - 1));
@@ -77,15 +143,20 @@ class LimPlayer {
                 }
 
             }
-            if (this.audio!.networkState === 2 && !this.isLoaing) {
-                console.log("start loading");
+            if ((this.bufferd < this.audio!.currentTime || this.bufferd === 0) && !this.isLoaing) {
                 this.elements.loadingSvg.style.display = "inline-block";
                 this.isLoaing = true;
-            } else if (this.audio!.networkState !== 2 && this.isLoaing) {
+            } else if (this.bufferd > this.audio!.currentTime && this.isLoaing) {
                 this.elements.loadingSvg.style.display = "none";
                 this.isLoaing = false;
-                console.log("stop loading");
             }
+            // if (this.audio!.networkState === 2 && !this.isLoaing) {
+            //     this.elements.loadingSvg.style.display = "inline-block";
+            //     this.isLoaing = true;
+            // } else if (this.audio!.networkState !== 2 && this.isLoaing) {
+            //     this.elements.loadingSvg.style.display = "none";
+            //     this.isLoaing = false;
+            // }
         }, 100);
         this.audio.addEventListener("canplay", () => {
             // this.audio!.play().catch((err)=>{
@@ -113,13 +184,19 @@ class LimPlayer {
         if (!audio)
             audio = this.playing;
         if (this.audio && audio) {
-            this.audio.src = audio.src;
+            if (!audio.src) {
+                return console.error("audio src is undefined");
+            }
+            if (audio.src.includes(".m3u8")) {
+                this.hls.loadSource(audio.src);
+            } else {
+                this.audio.src = audio.src;
+            }
             this.elements.audioName.innerText = audio.name || "unkown";
             this.elements.audioArtist.innerText = audio.artist || "unkown";
             this.elements.audioCover.setAttribute("src", audio.cover || "");
             this.setLikedUI();
             // TODO: 加载动画 加载的时候进度条跳动问题
-            console.log("loading");
         }
         this.elements.nowText.innerText = "0:00";
         this.elements.durationText.innerText = "loading...";
@@ -128,47 +205,40 @@ class LimPlayer {
         this.autoplayHelper();
     }
 
-    private checkOptionsValid(options: PlayerOptions) {
+    private checkOptionsValid(options: Partial<PlayerOptions>) {
         const keys = Object.keys(options);
-        keys.forEach((key) => {
-            if (!Object.prototype.hasOwnProperty.call(defaultOptions, key)) {
+        keys.forEach(key => {
+            if (!Object.prototype.hasOwnProperty.call(defaultPlayerOptions, key)) {
                 throw new ReferenceError("An unknown field was passed in: " + key);
             }
         });
     }
 
-    private initOptions(options?: PlayerOptions) {
+    private initOptions(options: Partial<PlayerOptions>) {
+        this.checkOptionsValid(options);
         const storageOptions = PlayerStorage.getOptions();
         let _options: PlayerOptions | null;
-        if (options) {
-            if (storageOptions) {
-                _options = options.lotp === false ? { ...defaultOptions, ...storageOptions, ...options } : { ...defaultOptions, ...options, ...storageOptions };
-            }
-            else {
-                _options = { ...defaultOptions, ...options };
-            }
+        if (storageOptions) {
+            _options = options.lotp === false ? { ...defaultPlayerOptions, ...storageOptions, ...options } : { ...defaultPlayerOptions, ...options, ...storageOptions };
         } else {
-            if (!storageOptions) {
-                return defaultOptions;
-            }
-            _options = storageOptions;
+            _options = { ...defaultPlayerOptions, ...options };
         }
-        this.checkOptionsValid(_options);
+        if (_options.device === "auto") {
+            _options.device = isMobile() ? "mobile" : "desktop";
+        }
         return _options;
     }
 
-    private initPlayList(list: AudioConfig[] | undefined) {
-        if (list && list.length !== 0) {
-            list.forEach((audio, index) => {
-                if (!audio.name || !audio.src || !audio.artist) {
-                    throw new ReferenceError("Missing required fields in an audio config");
-                }
-                audio.index = index;
-            });
-        } else {
-            list = [defaultSongConfig];
-        }
-        return list;
+    private initPlayList(list: AudioConfig[]) {
+        const _list: Required<AudioConfig>[] = [];
+        list.forEach((audio, index) => {
+            if (!audio.src) {
+                throw new ReferenceError("Missing required fields in an audio config");
+            }
+            audio.index = index;
+            _list.push({ ...defaultAudioConfig, ...audio });
+        });
+        return _list;
     }
 
     private setLikedUI() {
@@ -215,12 +285,13 @@ class LimPlayer {
                 oldSvg = likedSvg;
                 newSvg = unlikeSvg;
                 className = ["animate_beat", "animate_shake"];
-                this.likeChanged("unlike", this.playing);
             } else {
                 oldSvg = unlikeSvg;
                 newSvg = likedSvg;
                 className = ["animate_shake", "animate_beat"];
-                this.likeChanged("liked", this.playing);
+            }
+            if (this.likeChanged) {
+                this.likeChanged(this.playing);
             }
             this.playing.liked = !this.playing.liked;
             // TODO: 需要在回调里更改总数据的like
@@ -287,7 +358,7 @@ class LimPlayer {
         });
         // 音量按钮点击事件
         this.elements.volumeButton.addEventListener("click", () => {
-            const volume = this.options.volume!;
+            const volume = this.options.volume;
             // 取消静音以后要恢复到的值
             const _volume = volume !== 0 ? volume : 0.5;
             let volumeToSet: number;
@@ -316,19 +387,23 @@ class LimPlayer {
         // 音量条事件
         volumeProgressBar.addEventListener("mousedown", (e) => {
             const moveHandler = (e: MouseEvent) => {
-                const width = e.clientX - volumeProgressBar.offsetLeft - 15;
+                const width = e.clientX - volumeProgressBar.getBoundingClientRect().left;
+
                 if (width > 50) {
                     this.options.volume = width > 100 ? 1 : width / 100;
+                    this.options.mute = false;
                     hide(mediumVolumeSvg);
                     hide(muteSvg);
                     show(highVolumeSvg);
                 } else if (width <= 0) {
                     this.options.volume = 0;
+                    this.options.mute = true;
                     hide(highVolumeSvg);
                     hide(mediumVolumeSvg);
                     show(muteSvg);
                 } else {
                     this.options.volume = width / 100;
+                    this.options.mute = false;
                     hide(muteSvg);
                     hide(highVolumeSvg);
                     show(mediumVolumeSvg);
@@ -340,13 +415,11 @@ class LimPlayer {
                 }
             };
             const upHandler = () => {
-                localStorage.setItem("lim_player_volume", String(this.options.volume!));
                 document.removeEventListener("mousemove", moveHandler);
                 document.removeEventListener("mouseup", upHandler);
                 removeClass(volumePointer, "pointer-active");
                 removeClass(volumeProgressNow, "now-active");
             };
-            // console.log(e);
             // console.log(volumeProgressBar.offsetLeft);
             moveHandler(e);
             addClass(volumePointer, "pointer-active");
@@ -358,10 +431,12 @@ class LimPlayer {
         this.elements.playButton.addEventListener("click", () => {
             this.playOrPause();
         });
-        // TODO: 方向键快进和后退
+        // TODO: 方向键快进和后退,音量增减
+        // 空格会选中上次点击的内容
         // 空格播放和暂停
         document.addEventListener("keypress", (e) => {
             const element = e.target! as HTMLElement;
+            if (e.key !== ' ') { return; }
             if (element.nodeName == 'TEXTAREA' || element.nodeName == 'INPUT' || element.nodeName == 'BUTTON') {
                 return;
             } else {
@@ -375,11 +450,7 @@ class LimPlayer {
             this.progressMoveLock = true;
             let second: number;
             const moveHandler = (e: MouseEvent) => {
-                const widthDifference = e.clientX - playbackProgressBar.offsetLeft - 15;
-                // console.log(playbackProgressBar.offsetWidth);
-
-                // console.log(widthDifference);
-                // console.log(widthDifference / playbackProgressBar.offsetWidth);
+                const widthDifference = e.clientX - playbackProgressBar.getBoundingClientRect().left;
                 const precent = widthDifference / playbackProgressBar.offsetWidth;
                 if (precent > 1 || precent < 0) { return; }
                 if (isNaN(this.audio!.duration)) { return; }
@@ -445,16 +516,21 @@ class LimPlayer {
                     } else {
                         this.playing = this.playList[index + 1];
                     }
+                    if (this.onNext) {
+                        this.onNext(this.playing);
+                    }
                 } else {
                     if (index === 0) {
                         this.playing = this.playList[length - 1];
                     } else {
                         this.playing = this.playList[index - 1];
                     }
+                    if (this.onPrev) {
+                        this.onPrev(this.playing);
+                    }
                 }
             }
         }
-
         this.initAudio();
     }
 
@@ -484,20 +560,24 @@ class LimPlayer {
 
     // TODO: 连续暂停/播放，时间精度问题
     private playOrPause() {
-        if (!this.audio) return;
+        if (!this.audio || !this.playing || isNaN(this.audio.duration)) return;
         // TODO: 使用worker
         if (this.audio.paused) {
+            addClass(this.elements.pauseSvg, "animate_small_beat");
             this.play();
         } else {
+            addClass(this.elements.playSvg, "animate_small_beat");
             this.pause();
         }
     }
 
     play() {
         if (!this.audio) return;
-        addClass(this.elements.pauseSvg, "animate_small_beat");
         this.audio.play().then(() => {
             if (this.audio!.autoplay) return;
+            if (this.onPlayed) {
+                this.onPlayed(this.playing!);
+            }
             this.playHandler();
         }).catch((err) => {
             throw err;
@@ -506,18 +586,46 @@ class LimPlayer {
 
     pause() {
         if (!this.audio) return;
-        addClass(this.elements.playSvg, "animate_small_beat");
         this.audio.pause();
         hide(this.elements.pauseSvg);
         show(this.elements.playSvg);
     }
 
-    playHandler() {
+    next() {
+        if (!this.audio) return;
+        this.preAndNextHandler(true);
+    }
+
+    pre() {
+        if (!this.audio) return;
+        this.preAndNextHandler();
+    }
+
+    setPlaylist(playlist: Omit<AudioConfig, "index">[], audio?: AudioConfig) {
+        this.playList = this.initPlayList(playlist);
+        this.playing = audio ? audio : (this.playList[0] || null);
+        this.initAudio(audio);
+    }
+
+    setPlayingLike(like: boolean) {
+        if (like && !this.playing?.liked || !like && this.playing?.liked) {
+            this.elements.likeButton.click();
+        }
+    }
+
+    // setOptions()
+
+    private playHandler() {
         hide(this.elements.playSvg);
         show(this.elements.pauseSvg);
         if (this.playbackTimer) return;
 
         const endHnadler = () => {
+            this.elements.loadingSvg.style.display = "none";
+            this.isLoaing = false;
+            if (this.ended) {
+                this.ended();
+            }
             hide(this.elements.pauseSvg);
             show(this.elements.playSvg);
             if (this.playbackTimer) {
@@ -536,7 +644,7 @@ class LimPlayer {
                     break;
                 case "none":
                     this.nextHandlerWithoutLoop();
-                    break;                    
+                    break;
                 default:
                     break;
             }
@@ -548,7 +656,6 @@ class LimPlayer {
         this.playbackTimer = window.setInterval(() => {
             if (this.audio!.paused) return;
             const currentTime = this.audio!.currentTime;
-            // console.log(currentTime);
 
             if (!this.progressMoveLock) {
                 this.elements.nowText.innerText = secondToTime(currentTime);
@@ -564,14 +671,52 @@ class LimPlayer {
         this.audio!.addEventListener("ended", endHnadler);
     }
 
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
-    private likeChanged(value: "liked" | "unlike", audio: AudioConfig) { }
-
     // eslint-disable-next-line no-unused-vars
-    onLikeChanged(callback: (value: "liked" | "unlike", audio: AudioConfig) => void) {
-        this.likeChanged = callback;
+    // onLikeChanged(callback: (value: "liked" | "unlike", audio: AudioConfig) => void) {
+    //     this.likeChanged = callback;
+    // }
+    on(event: 'likeChanged', handler: (audio: AudioConfig) => void): void
+    on(event: 'ended', handler: () => void): void
+    on(event: 'error', handler: (data: ErrorData) => void): void
+    on(event: 'play', handler: (audio: AudioConfig) => void): void
+    on(event: 'prev', handler: (audio: AudioConfig) => void): void
+    on(event: 'next', handler: (audio: AudioConfig) => void): void
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    on(event: PlayerEvents, handler: (arg?: any) => void) {
+        switch (event) {
+            case "likeChanged":
+                this.likeChanged = handler;
+                break;
+            case "ended":
+                this.ended = handler;
+                break;
+            case "error":
+                this.errorOccurred = handler;
+                break;
+            case "play":
+                this.onPlayed = handler;
+                break;
+            case "prev":
+                this.onPrev = handler;
+                break;
+            case "next":
+                this.onNext = handler;
+                break;
+            default:
+                break;
+        }
     }
 
+    // onEnded(callback: () => void) {
+    //     this.ended = callback;
+    // }
+
+    // onDownload(callback: (audio: AudioConfig) => void) {
+    //     this.likeChanged = callback;
+    // }
+
+    // onOptionsChanged()
 }
 
+export { PlayerOptions, AudioConfig };
 export default LimPlayer;

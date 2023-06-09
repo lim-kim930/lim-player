@@ -1,3 +1,4 @@
+// TODO: 改写成类的形式
 const hide = (element: HTMLElement) => {
     element.style.display = "none";
 };
@@ -34,7 +35,7 @@ const percentToSecond = (precent: number, duration: number) => {
 const getElement = (id: string) => {
     return document.querySelector("#" + id) as HTMLElement;
 };
-
+// TODO: 创建一个Elements对象
 const initElements = (id: string) => {
     // info
     const audioCover = getElement(id + " .limplayer-info .cover img");
@@ -77,15 +78,24 @@ const initElements = (id: string) => {
     const nextButton = getElement(id + " .controls-right .next");
 
     return {
-        audioCover, audioArtist,
-        likedSvg, unlikeSvg, likeButton, audioName,
-        shuffleSvg, shuffleButton, shufflePointer,
-        listLoopSvg, singleLoopSvg, loopButtton, loopPointer,
-        muteSvg, mediumVolumeSvg, highVolumeSvg, volumeButton, volumeProgressNow, volumeProgressBar, volumePointer,
-        durationText, nowText, playbackProgressBar, playbackPointer, playbackProgressNow, playbackProgressBuffered,
-        playSvg, pauseSvg, playButton, loadingSvg,
-        preButton, nextButton
+        audioCover, audioArtist, likedSvg, unlikeSvg, likeButton, audioName, shuffleSvg, shuffleButton, shufflePointer, listLoopSvg, singleLoopSvg, loopButtton, loopPointer, muteSvg, mediumVolumeSvg, highVolumeSvg, volumeButton, volumeProgressNow, volumeProgressBar, volumePointer, durationText, nowText, playbackProgressBar, playbackPointer, playbackProgressNow, playbackProgressBuffered, playSvg, pauseSvg, playButton, loadingSvg, preButton, nextButton
     };
 };
 
-export { hide, show, addClass, removeClass, secondToTime, percentToSecond, getElement, initElements };
+const isMobile = () => {
+    const mobileReg = /(mobile|phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i;
+    return navigator.userAgent.match(mobileReg) !== null;
+};
+
+const generateRandomString = (size: number) => {
+    const characters = '0123456789abcdefghijklmnopqrstuvwxyz';
+    let randomString = '';
+    randomString += Math.floor(Math.random() * 10);
+    for (let i = 1; i < size; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        randomString += characters[randomIndex];
+    }
+    return randomString;
+}
+
+export { hide, show, addClass, removeClass, secondToTime, percentToSecond, getElement, initElements, isMobile, generateRandomString };
