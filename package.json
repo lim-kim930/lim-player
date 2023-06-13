@@ -1,6 +1,6 @@
 {
   "name": "lim-player",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "A web music player",
   "main": "lib/index.js",
   "scripts": {

@@ -37,6 +37,7 @@ class LimPlayer {
     private ended: (() => void) | undefined;
     private errorOccurred: ((data: ErrorData) => void) | undefined;
     private onPlayed: ((audio: AudioConfig) => void) | undefined;
+    private onPaused: ((audio: AudioConfig) => void) | undefined;
     private onPrev: ((audio: AudioConfig) => void) | undefined;
     private onNext: ((audio: AudioConfig) => void) | undefined;
     private hls: Hls;
@@ -180,7 +181,7 @@ class LimPlayer {
         // this.initAudio();
     }
 
-    private initAudio(audio?: AudioConfig | null) {
+    private initAudio(audio?: AudioConfig | null, autoplay = true) {
         if (!audio)
             audio = this.playing;
         if (this.audio && audio) {
@@ -202,7 +203,9 @@ class LimPlayer {
         this.elements.durationText.innerText = "loading...";
         this.elements.playbackProgressNow.style.width = "0";
         this.elements.playbackProgressBuffered.style.width = "0";
-        this.autoplayHelper();
+        if (autoplay) {
+            this.autoplayHelper();
+        }
     }
 
     private checkOptionsValid(options: Partial<PlayerOptions>) {
@@ -587,6 +590,9 @@ class LimPlayer {
     pause() {
         if (!this.audio) return;
         this.audio.pause();
+        if (this.onPaused) {
+            this.onPaused(this.playing!);
+        }
         hide(this.elements.pauseSvg);
         show(this.elements.playSvg);
     }
@@ -604,7 +610,7 @@ class LimPlayer {
     setPlaylist(playlist: Omit<AudioConfig, "index">[], audio?: AudioConfig) {
         this.playList = this.initPlayList(playlist);
         this.playing = audio ? audio : (this.playList[0] || null);
-        this.initAudio(audio);
+        this.initAudio(audio, false);
     }
 
     setPlayingLike(like: boolean) {
@@ -679,6 +685,7 @@ class LimPlayer {
     on(event: 'ended', handler: () => void): void
     on(event: 'error', handler: (data: ErrorData) => void): void
     on(event: 'play', handler: (audio: AudioConfig) => void): void
+    on(event: 'pause', handler: (audio: AudioConfig) => void): void
     on(event: 'prev', handler: (audio: AudioConfig) => void): void
     on(event: 'next', handler: (audio: AudioConfig) => void): void
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -695,6 +702,9 @@ class LimPlayer {
                 break;
             case "play":
                 this.onPlayed = handler;
+                break;
+            case "pause":
+                this.onPaused = handler;
                 break;
             case "prev":
                 this.onPrev = handler;
