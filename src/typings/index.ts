@@ -49,4 +49,4 @@ export interface PlayerOptions {
     device: "auto" | "mobile" | "desktop";
 }
 
-export type PlayerEvents = "likeChanged" | "ended" | "error" | "next" | "prev" | "play"
+export type PlayerEvents = "likeChanged" | "ended" | "error" | "next" | "prev" | "play" | "pause"
