@@ -578,10 +578,10 @@ class LimPlayer {
         if (!this.audio) return;
         this.audio.play().then(() => {
             if (this.audio!.autoplay) return;
+            this.playHandler();
             if (this.onPlayed) {
                 this.onPlayed(this.playing!);
             }
-            this.playHandler();
         }).catch((err) => {
             throw err;
         });
