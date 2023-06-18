@@ -293,10 +293,10 @@ class LimPlayer {
                 newSvg = likedSvg;
                 className = ["animate_shake", "animate_beat"];
             }
+            this.playing.liked = !this.playing.liked;
             if (this.likeChanged) {
                 this.likeChanged(this.playing);
             }
-            this.playing.liked = !this.playing.liked;
             // TODO: 需要在回调里更改总数据的like
             hide(oldSvg);
             removeClass(oldSvg, className[0]);
@@ -578,10 +578,10 @@ class LimPlayer {
         if (!this.audio) return;
         this.audio.play().then(() => {
             if (this.audio!.autoplay) return;
+            this.playHandler();
             if (this.onPlayed) {
                 this.onPlayed(this.playing!);
             }
-            this.playHandler();
         }).catch((err) => {
             throw err;
         });
