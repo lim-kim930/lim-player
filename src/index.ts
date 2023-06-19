@@ -182,8 +182,9 @@ class LimPlayer {
     }
 
     private initAudio(audio?: AudioConfig | null, autoplay = true) {
-        if (!audio)
+        if (!audio) {
             audio = this.playing;
+        }
         if (this.audio && audio) {
             if (!audio.src) {
                 return console.error("audio src is undefined");
@@ -244,10 +245,13 @@ class LimPlayer {
         return _list;
     }
 
-    private setLikedUI() {
+    private setLikedUI(like?: boolean) {
         const likedSvg = this.elements.likedSvg;
+        removeClass(likedSvg, "animate_beat");
         const unlikeSvg = this.elements.unlikeSvg;
-        if (this.playing!.liked) {
+        removeClass(unlikeSvg, "animate_shake");
+        const flag = like !== undefined ? like : this.playing!.liked;
+        if (flag) {
             hide(unlikeSvg);
             show(likedSvg);
         } else {
@@ -613,9 +617,37 @@ class LimPlayer {
         this.initAudio(audio, false);
     }
 
-    setPlayingLike(like: boolean) {
-        if (like && !this.playing?.liked || !like && this.playing?.liked) {
-            this.elements.likeButton.click();
+    setMusicLike(id: string, like: boolean) {
+        const len = this.playList.length;
+        let oldSvg: HTMLElement;
+        let newSvg: HTMLElement;
+        let className: string[];
+        const likedSvg = this.elements.likedSvg;
+        const unlikeSvg = this.elements.unlikeSvg;
+        for (let i = 0; i < len; i++) {
+            if (this.playList[i].id === id && like !== this.playList[i].liked) {
+                this.playList[i].liked = like;
+                if (this.playing && id === this.playing.id) {
+                    if (!like) {
+                        oldSvg = likedSvg;
+                        newSvg = unlikeSvg;
+                        className = ["animate_beat", "animate_shake"];
+                    } else if (like) {
+                        oldSvg = unlikeSvg;
+                        newSvg = likedSvg;
+                        className = ["animate_shake", "animate_beat"];
+                    } else {
+                        return;
+                    }
+                    this.playing.liked = like;
+                    hide(oldSvg);
+                    removeClass(oldSvg, className[0]);
+                    show(newSvg);
+                    addClass(newSvg, className[1]);
+                }
+                // TODO: 需要在回调里更改总数据的like
+                return;
+            }
         }
     }
 
