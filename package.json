@@ -1,6 +1,6 @@
 {
   "name": "lim-player",
-  "version": "0.2.7",
+  "version": "0.2.9",
   "description": "A web music player",
   "main": "lib/index.js",
   "scripts": {
@@ -32,6 +32,6 @@
   },
   "types": "lib/index.d.ts",
   "dependencies": {
-    "lim-hls": "^1.0.0"
+    "lim-hls": "^1.4.8"
   }
 }

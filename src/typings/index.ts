@@ -47,6 +47,7 @@ export interface PlayerOptions {
     lotp: boolean;
     // 设备类型
     device: "auto" | "mobile" | "desktop";
+    hls: boolean;
 }
 
 export type PlayerEvents = "likeChanged" | "ended" | "error" | "next" | "prev" | "play" | "pause"

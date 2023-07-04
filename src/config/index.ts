@@ -11,7 +11,8 @@ const defaultPlayerOptions: PlayerOptions = {
     volume: 0.3,
     mute: false,
     lotp: true,
-    device: "auto"
+    device: "auto",
+    hls: false
 };
 const defaultAudioConfig: Required<AudioConfig> = {
     // TODO: 考虑是否可以不传name,artist字段

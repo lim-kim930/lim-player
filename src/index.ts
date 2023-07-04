@@ -10,7 +10,7 @@
 // TODO: 允许后续设置playlist
 // TODO: 点击按钮的动画应该是按下变小，松开在变大, 点击下一曲之后播放不要跳动
 // TODO: Proxy代理，可否应用到状态更新
-import Hls, { ErrorData, Events, HlsConfig } from 'lim-hls';
+import Hls, { ErrorData } from 'lim-hls';
 // import "./assets/style/index.less";
 import PlayerTemplete from "./playerTemplate";
 import { hide, show, addClass, removeClass, secondToTime, percentToSecond, initElements, isMobile, generateRandomString } from "./utils";
@@ -40,7 +40,7 @@ class LimPlayer {
     private onPaused: ((audio: AudioConfig) => void) | undefined;
     private onPrev: ((audio: AudioConfig) => void) | undefined;
     private onNext: ((audio: AudioConfig) => void) | undefined;
-    private hls: Hls;
+    private hls: Hls | undefined;
     audio: HTMLAudioElement | undefined;
     constructor(el: string, options: Partial<PlayerOptions> = {}, lists: Omit<AudioConfig, "index">[] = [], auth?: { aes_key: string, encrypted: string, iv: string, token: string }) {
         // 播放器数量
@@ -60,40 +60,42 @@ class LimPlayer {
         this.playing = this.playList[0] || null;
         // TODO: 根据专辑颜色或options里的主题，更改.playback .progressbar .now的背景色
         const templete = new PlayerTemplete(this.options, this.playing);
-        this.hls = new Hls({
-            aes_key: auth?.aes_key,
-            aes_iv: auth?.iv,
-            debug: false,
-            enableWorker: true,
-            lowLatencyMode: true,
-            xhrSetup: (xhr, url) => {
-                if (url.includes('.key') && auth) {
-                    xhr.setRequestHeader('AESKEY', auth.encrypted);
-                    xhr.setRequestHeader('AESIV', auth.iv);
+        if (this.options.hls) {
+            this.hls = new Hls({
+                aes_key: auth?.aes_key,
+                aes_iv: auth?.iv,
+                debug: false,
+                enableWorker: true,
+                lowLatencyMode: true,
+                xhrSetup: (xhr, url) => {
+                    if (url.includes('.key') && auth) {
+                        xhr.setRequestHeader('AESKEY', auth.encrypted);
+                        xhr.setRequestHeader('AESIV', auth.iv);
+                    }
+                    if (auth?.token) {
+                        xhr.setRequestHeader('Authorization', auth?.token);
+                    }
                 }
-                if (auth?.token) {
-                    xhr.setRequestHeader('Authorization', auth?.token);
+            });
+            this.hls.on(Hls.Events.ERROR, (eventName, data) => {
+                if (this.errorOccurred) {
+                    this.errorOccurred(data);
                 }
-            }
-        });
-        this.hls.on(Hls.Events.ERROR, (eventName, data) => {
-            if (this.errorOccurred) {
-                this.errorOccurred(data);
-            }
-            console.log(eventName, data);
-        });
-        // this.hls.on(Hls.Events.FRAG_LOADING, () => {
-        //     if (this.bufferd < this.audio!.currentTime && !this.isLoaing) {
-        //         this.elements.loadingSvg.style.display = "inline-block";
-        //         this.isLoaing = true;
-        //     }
-        // });
-        // this.hls.on(Hls.Events.BUFFER_APPENDED, () => {
-        //     if (this.bufferd === 0 && this.audio!.currentTime ===0 && this.isLoaing) {
-        //         this.elements.loadingSvg.style.display = "none";
-        //         this.isLoaing = false;
-        //     }
-        // });
+                console.log(eventName, data);
+            });
+            // this.hls.on(Hls.Events.FRAG_LOADING, () => {
+            //     if (this.bufferd < this.audio!.currentTime && !this.isLoaing) {
+            //         this.elements.loadingSvg.style.display = "inline-block";
+            //         this.isLoaing = true;
+            //     }
+            // });
+            // this.hls.on(Hls.Events.BUFFER_APPENDED, () => {
+            //     if (this.bufferd === 0 && this.audio!.currentTime ===0 && this.isLoaing) {
+            //         this.elements.loadingSvg.style.display = "none";
+            //         this.isLoaing = false;
+            //     }
+            // });
+        }
         this.playerID = templete.id;
         addClass(element, "limplayer");
         element.setAttribute("id", this.playerID);
@@ -105,13 +107,15 @@ class LimPlayer {
 
     private initAudioElement() {
         this.audio = document.createElement("audio");
-        this.hls.attachMedia(this.audio);
+        if (this.hls) {
+            this.hls.attachMedia(this.audio);
+        }
         this.audio.preload = this.options.preload;
         this.audio.autoplay = this.options.autoplay;
         this.audio.loop = this.options.loopType === "single";
         this.audio.volume = this.options.volume;
         if (this.playing && this.playing.src) {
-            if (this.playing.src.includes(".m3u8")) {
+            if (this.hls && this.playing.src.includes(".m3u8")) {
                 this.hls.loadSource(this.playing.src);
             } else {
                 this.audio.src = this.playing.src;
@@ -189,7 +193,7 @@ class LimPlayer {
             if (!audio.src) {
                 return console.error("audio src is undefined");
             }
-            if (audio.src.includes(".m3u8")) {
+            if (this.hls && audio.src.includes(".m3u8")) {
                 this.hls.loadSource(audio.src);
             } else {
                 this.audio.src = audio.src;
