@@ -10,6 +10,7 @@
 // TODO: 允许后续设置playlist
 // TODO: 点击按钮的动画应该是按下变小，松开在变大, 点击下一曲之后播放不要跳动
 // TODO: Proxy代理，可否应用到状态更新
+// TODO: 增加销毁方法
 import Hls, { ErrorData } from 'lim-hls';
 // import "./assets/style/index.less";
 import PlayerTemplete from "./playerTemplate";
